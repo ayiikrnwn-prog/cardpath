@@ -1,0 +1,777 @@
+{
+ "CARDS": {
+  "capital-one-platinum-secured": {
+   "key": "capone49",
+   "name": "Capital One Platinum Secured",
+   "network": "VISA",
+   "h1": "A real card from a major bank \u2014 for the price of a pizza night.",
+   "hero": "The Capital One Platinum Secured starts with a deposit as low as $49 \u2014 the lowest among major issuers \u2014 with no annual fee and a path to an unsecured card.",
+   "angle": "lowest-deposit",
+   "dep": "$49\u2013$200",
+   "fee": "$0",
+   "depNote": "Refundable deposit becomes your credit line",
+   "body": {
+    "hook": [
+     "Getting rejected because of a thin credit file stings twice: once by the denial, and again by every bank that sees it afterward. Capital One built the Platinum Secured precisely for that moment \u2014 for people who are new to credit or rebuilding after mistakes, and who cannot put hundreds of dollars on the table to prove themselves.",
+     "Most secured cards want $200 or more upfront. Capital One lowers that bar: your initial credit line can start at $49, $99, or $200 depending on your approval \u2014 you find out the exact amount before you commit a cent. No annual fee means the card costs you nothing while it quietly builds your file."
+    ],
+    "how": "The mechanics are simple. You place a refundable security deposit with Capital One \u2014 that deposit becomes your credit line, not a fee. You use the card for small purchases, pay on time, and Capital One reports those payments to all three bureaus. After your first six months, Capital One reviews your account and may raise your credit line without an additional deposit. Responsible use over time can lead to graduation to an unsecured card and your deposit returned.",
+    "fit": [
+     "New to credit with no score yet",
+     "Rebuilding after past mistakes",
+     "Can put aside $49\u2013$200 as a one-time deposit",
+     "Want a major-bank card, not a subprime issuer"
+    ],
+    "nofit": [
+     "You need rewards from day one (look at the Quicksilver Secured)",
+     "You have no bank account at all (OpenSky works without one)",
+     "You want a card today with zero deposit (Credit One, with its annual fee)"
+    ],
+    "compare": "Compared with the Discover it\u00ae Secured, the Capital One path starts cheaper ($49 vs $200) but earns no rewards and has no automatic upgrade guarantee \u2014 Discover reviews at 7 months and converts strong accounts. Choose Capital One for the lowest entry cost; choose Discover when you can fund $200 and want cash back plus graduation."
+   },
+   "faq": [
+    [
+     "Does checking or applying hurt my credit score?",
+     "There is no hard credit pull to find out your pre-qualification. A full application does involve a credit check by the issuer, but for a secured card approval odds are not score-driven the way unsecured cards are."
+    ],
+    [
+     "What credit score do I need?",
+     "Capital One does not publish a minimum score for this card \u2014 it is designed for people with no score, limited history, or rebuilding credit. Your deposit and ability to fund it matter more than your score."
+    ],
+    [
+     "How long does it take to build credit with this card?",
+     "Payments are reported to all three bureaus from your first billing cycle. Many builders see measurable score movement after 3\u20136 months of on-time reporting; Capital One reviews your line for increase after 6 months."
+    ],
+    [
+     "What happens to my deposit?",
+     "It stays in a secured account and becomes your credit line \u2014 it is not a fee. If you upgrade to unsecured or close the account in good standing, the deposit is refunded."
+    ],
+    [
+     "Can I be denied?",
+     "Yes \u2014 secured does not mean guaranteed. Common denial reasons: insufficient income, unresolved delinquencies, or too many recent applications. You keep your deposit if you are denied before funding."
+    ]
+   ],
+   "grad": "auto review at 6 months",
+   "warn": null
+  },
+  "quicksilver-secured": {
+   "key": "quicksilver",
+   "name": "Capital One Quicksilver Secured",
+   "network": "VISA",
+   "h1": "Cash back while you rebuild \u2014 not either-or.",
+   "hero": "The Quicksilver Secured pays 1.5% cash back on everything while you build credit \u2014 unusual for a secured card, with a $200 refundable deposit and no annual fee.",
+   "angle": "rewards",
+   "dep": "$200",
+   "fee": "$0",
+   "depNote": "Refundable deposit becomes your credit line",
+   "body": {
+    "hook": [
+     "For years the rule was simple: secured cards build credit, rewards cards pay you. You picked one. Capital One broke the rule \u2014 the Quicksilver Secured pays unlimited 1.5% cash back on every purchase while your file grows underneath it.",
+     "If you are rebuilding, every dollar of spending you already do \u2014 gas, groceries, subscriptions \u2014 can work twice: once as the payment history that raises your score, once as cash back in your pocket."
+    ],
+    "how": "You fund a $200 refundable deposit, which becomes your credit line. From the first swipe, purchases earn 1.5% cash back with no categories to track and no annual fee. Payments report to all three bureaus. Over time, Capital One reviews accounts for credit line increases and potential graduation to the unsecured Quicksilver \u2014 where the rewards structure continues.",
+    "fit": [
+     "Rebuilding with regular monthly spending",
+     "Can fund a $200 deposit",
+     "Want rewards while building, not after"
+    ],
+    "nofit": [
+     "Cannot put $200 aside (Capital One Platinum Secured starts at $49)",
+     "No score at all and no bank account (OpenSky)",
+     "Maximum upgrade speed (Discover has auto reviews at 7 months)"
+    ],
+    "compare": "Versus the Discover it\u00ae Secured: Discover pays 2% at gas and restaurants (rotating first year double) and reviews automatically at 7 months, but needs the same $200 and solid on-time history. Quicksilver wins on simplicity \u2014 flat 1.5% everywhere, no activation needed."
+   },
+   "faq": [
+    [
+     "Does checking or applying hurt my credit score?",
+     "Pre-qualification uses a soft check with no score impact. A formal application involves a credit check, but as a secured card, approval centers on your deposit rather than your score."
+    ],
+    [
+     "What credit score do I need?",
+     "No published minimum \u2014 it targets fair, limited, or rebuilding credit. The $200 deposit is the real requirement."
+    ],
+    [
+     "How long does it take to build credit with this card?",
+     "Reporting starts with your first billing cycle. Expect meaningful movement after 3\u20136 months; Capital One periodically reviews accounts for upgrades."
+    ],
+    [
+     "What happens to my deposit?",
+     "Refundable \u2014 it becomes your credit line. On graduation to unsecured or closure in good standing, you get it back."
+    ],
+    [
+     "Can I be denied?",
+     "Yes. Denied applications typically involve insufficient income, recent delinquencies, or application volume. Pre-qualifying first avoids surprises."
+    ]
+   ],
+   "grad": "auto review path",
+   "warn": null
+  },
+  "discover-it-secured": {
+   "key": "discover",
+   "name": "Discover it\u00ae Secured",
+   "network": "DISCOVER",
+   "h1": "The secured card that graduates you \u2014 automatically.",
+   "hero": "Discover reviews your account automatically starting at 7 months and converts strong accounts to unsecured \u2014 with your deposit back. Plus 2% cash back at gas stations and restaurants.",
+   "angle": "upgrade-path",
+   "dep": "$200",
+   "fee": "$0",
+   "depNote": "Refundable \u2014 returned on graduation",
+   "body": {
+    "hook": [
+     "The dirty secret of secured cards: many issuers are happy to keep your deposit forever. Discover designed the it\u00ae Secured to end \u2014 automatic reviews begin at 7 months, and cardholders in good standing graduate to unsecured with their deposit refunded.",
+     "That graduation path changes the psychology of rebuilding. You are not renting a credit line; you are on a timed track out of it."
+    ],
+    "how": "Fund a $200 minimum refundable deposit. Spend and pay on time \u2014 Discover reports to all three bureaus. You earn 2% cash back at gas stations and restaurants (on up to $1,000 in combined purchases per quarter) and 1% on everything else, with all cash back matched at the end of your first year. Starting at 7 months, Discover reviews your account automatically; graduation depends on on-time payments and spending, not a score cutoff you have to guess.",
+    "fit": [
+     "Rebuilding with steady income and on-time habits",
+     "Can fund $200 and keep utilization low",
+     "Want the clearest, most automatic graduation path"
+    ],
+    "nofit": [
+     "Cannot fund $200 yet (Capital One from $49)",
+     "No bank account (OpenSky)",
+     "Active bankruptcy (OpenSky is more forgiving)"
+    ],
+    "compare": "Versus Capital One Platinum Secured: Discover requires double the deposit but pays rewards and reviews automatically; Capital One starts cheaper with no rewards and no guaranteed upgrade timeline. If graduation is the priority, Discover is the strongest path in the category."
+   },
+   "faq": [
+    [
+     "Does checking or applying hurt my credit score?",
+     "Pre-qualification is a soft check. Applying triggers a hard inquiry, but Discover evaluates secured applications with rebuilding applicants in mind rather than score-minimums."
+    ],
+    [
+     "What credit score do I need?",
+     "No published minimum. This card accepts limited, fair, and rebuilding credit \u2014 the deposit and income matter most."
+    ],
+    [
+     "How long does it take to build credit with this card?",
+     "Reporting begins with the first cycle; many see score movement in 3\u20136 months. Graduation reviews start at 7 months and continue periodically."
+    ],
+    [
+     "What happens to my deposit?",
+     "Refunded when you graduate to unsecured or close in good standing \u2014 that is the design goal of the product."
+    ],
+    [
+     "Can I be denied?",
+     "Yes \u2014 especially with unresolved delinquencies or excessive recent applications. Discover offers pre-qualification to check first."
+    ]
+   ],
+   "grad": "auto at 7 months",
+   "warn": null
+  },
+  "opensky-secured": {
+   "key": "opensky",
+   "name": "OpenSky\u00ae Secured Visa\u00ae",
+   "network": "VISA",
+   "h1": "After bankruptcy, when most banks close the door.",
+   "hero": "OpenSky approves without a credit check, considers applicants in active or discharged bankruptcy, and needs no bank account \u2014 $100 minimum deposit.",
+   "angle": "bankruptcy-friendly",
+   "dep": "$100\u2013$3,000",
+   "fee": "$35/yr",
+   "depNote": "Refundable deposit becomes your credit line",
+   "body": {
+    "hook": [
+     "A bankruptcy filing closes most credit doors for years. OpenSky exists for exactly that moment: no credit check to apply, and issuers' usual bankruptcy exclusions do not apply here \u2014 applicants with active or discharged bankruptcies are considered.",
+     "That makes OpenSky the most common second-chance card in rebuild-after-setback journeys \u2014 not the cheapest, but the one most likely to say yes."
+    ],
+    "how": "You fund a refundable deposit between $100 and $3,000 \u2014 it becomes your credit line. No credit check is performed. Payments report to all three bureaus from the start. The $35 annual fee is the trade-off for the flexible approval; there is no interest as long as you pay your statement balance. Upgrade to unsecured is possible after a history of on-time payments.",
+    "fit": [
+     "Active or discharged bankruptcy",
+     "No bank account (fund by money order or debit)",
+     "Denied by major issuers repeatedly"
+    ],
+    "nofit": [
+     "Want $0 annual fee (Chime, if a checking account fits you)",
+     "Want rewards (Quicksilver Secured)",
+     "Have fair credit and no bankruptcy history (better options exist)"
+    ],
+    "compare": "Versus the Self Secured Visa: Self requires no cash upfront (it builds through a credit-builder loan), which suits tighter budgets; OpenSky is faster to a usable credit line and more established for bankruptcy cases. Versus Chime: Chime has no fee but requires a checking account with direct deposit."
+   },
+   "faq": [
+    [
+     "Does checking or applying hurt my credit score?",
+     "No \u2014 OpenSky performs no credit check at application. Approval is based on your deposit and identity verification."
+    ],
+    [
+     "What credit score do I need?",
+     "None. There is no score requirement, and bankruptcy does not disqualify you \u2014 the deposit is the collateral."
+    ],
+    [
+     "How long does it take to build credit with this card?",
+     "Reporting starts with your first cycle. With bankruptcy on file, expect a longer arc \u2014 6\u201312 months of on-time reporting before meaningful movement."
+    ],
+    [
+     "What happens to my deposit?",
+     "It is refundable \u2014 returned if you close in good standing or upgrade to unsecured."
+    ],
+    [
+     "Can I be denied?",
+     "Rarely, but yes \u2014 identity verification failure, deposit funding failure, or application volume can lead to denial."
+    ]
+   ],
+   "grad": "manual upgrade",
+   "warn": null
+  },
+  "opensky-no-bank-account": {
+   "key": "opensky_nobank",
+   "name": "OpenSky\u00ae Secured Visa\u00ae",
+   "network": "VISA",
+   "h1": "No bank account? No problem \u2014 that's the point.",
+   "hero": "OpenSky is one of the few cards that requires no checking account at all \u2014 fund your refundable deposit by money order or debit card and start building.",
+   "angle": "no-bank-account",
+   "dep": "$100\u2013$3,000",
+   "fee": "$35/yr",
+   "depNote": "Refundable deposit becomes your credit line",
+   "body": {
+    "hook": [
+     "An estimated 4.5% of US households are unbanked \u2014 no checking account, no direct deposit, no relationship with a bank. Nearly every credit builder card quietly assumes you have one. OpenSky does not.",
+     "Whether you left traditional banking by choice or circumstance, OpenSky lets you fund a refundable deposit by money order, debit card, or bank transfer \u2014 no account required to apply or to keep the card."
+    ],
+    "how": "Choose a deposit between $100 and $3,000 \u2014 it becomes your credit line and is fully refundable. No credit check, no bank account, no Chime-style direct deposit requirements. Payments report to all three bureaus. Manage the account online or by phone; the $35 annual fee covers the flexibility.",
+    "fit": [
+     "No checking account, by choice or circumstance",
+     "Prefer not to link bank credentials anywhere",
+     "Rebuilding with cash-based finances"
+    ],
+    "nofit": [
+     "Want a $0-fee option and have a bank account (Chime)",
+     "Want rewards (Quicksilver Secured)",
+     "Have $0 to deposit (Self builds via loan instead)"
+    ],
+    "compare": "Versus the Chime Credit Builder: Chime is free but requires a Chime checking account with qualifying direct deposit \u2014 a nonstarter for the unbanked. OpenSky trades a $35 fee for total bank-account independence."
+   },
+   "faq": [
+    [
+     "Does checking or applying hurt my credit score?",
+     "No credit check is performed \u2014 application does not touch your score."
+    ],
+    [
+     "What credit score do I need?",
+     "None. Deposit and identity verification decide approval."
+    ],
+    [
+     "How long does it take to build credit with this card?",
+     "First-cycle reporting; typical builders see movement within 3\u20136 months of on-time payments."
+    ],
+    [
+     "What happens to my deposit?",
+     "Refundable at closure in good standing or upgrade."
+    ],
+    [
+     "Can I be denied?",
+     "Yes, mainly for identity or funding verification issues \u2014 not for score or banking history."
+    ]
+   ],
+   "grad": "manual upgrade",
+   "warn": null
+  },
+  "credit-one-platinum": {
+   "key": "creditone",
+   "name": "Credit One Platinum",
+   "network": "VISA",
+   "h1": "No deposit, no collateral \u2014 at a price you should see coming.",
+   "hero": "Credit One Platinum is unsecured \u2014 no deposit \u2014 designed for fair-to-building credit. It carries an annual fee ($75\u201399) that we show up front, because surprises are the enemy of rebuilding.",
+   "angle": "no-deposit",
+   "dep": "$0",
+   "fee": "$75\u201399/yr",
+   "depNote": "Unsecured \u2014 no deposit required",
+   "warn": "Annual fee $75\u201399",
+   "body": {
+    "hook": [
+     "Every secured card asks the same thing: cash upfront. If you have $0 to spare, that is a wall. Credit One Platinum removes it \u2014 no deposit, unsecured, aimed at fair or rebuilding credit.",
+     "The trade is honesty about a fee: $75 in year one, then $99 annually (billed $8.25 monthly). For some rebuilders that fee is worth skipping the deposit; for others it is exactly why the secured path wins. We show both sides because trust beats a surprise statement."
+    ],
+    "how": "There is no deposit to fund. You apply, Credit One checks your credit, and if approved you get a modest unsecured line \u2014 often starting around $300\u2013$500. Payments report to all three major bureaus. Cash back (1% on eligible purchases) applies on some versions of this card; check your offer terms.",
+    "fit": [
+     "Zero dollars available for a deposit",
+     "Fair credit with some history",
+     "Value unsecured over low cost"
+    ],
+    "nofit": [
+     "Can fund $49+ \u2014 the Capital One Platinum Secured is fee-free and cheaper long-term",
+     "No score and no bank account (OpenSky)",
+     "Active bankruptcy (OpenSky again)"
+    ],
+    "compare": "Versus Capital One Platinum Secured: Credit One needs no deposit but costs $75\u201399/year forever; Capital One needs a refundable deposit and costs $0/year. Over two years, the secured path saves $150\u2013198 and returns the deposit. Choose Credit One only when the deposit is truly impossible."
+   },
+   "faq": [
+    [
+     "Does checking or applying hurt my credit score?",
+     "Applying involves a hard credit check \u2014 there is no soft pre-qualification for this product. One application, one inquiry."
+    ],
+    [
+     "What credit score do I need?",
+     "Targeted at fair credit (roughly 580\u2013669 range, though no official minimum is published). Poor or no credit usually needs the secured or no-credit-check routes."
+    ],
+    [
+     "How long does it take to build credit with this card?",
+     "Reporting begins with the first cycle; movement typically appears within 3\u20136 months of on-time payments."
+    ],
+    [
+     "What happens to my deposit?",
+     "There is no deposit \u2014 this card is unsecured. The cost is the annual fee instead."
+    ],
+    [
+     "Can I be denied?",
+     "Yes \u2014 this is a real unsecured approval with hard-pull underwriting, so denial rates are meaningfully higher than secured options."
+    ]
+   ],
+   "grad": "n/a (unsecured)"
+  },
+  "indigo-mastercard": {
+   "key": "indigo",
+   "name": "Indigo\u00ae Mastercard\u00ae",
+   "network": "MASTERCARD",
+   "h1": "See your odds before you apply \u2014 no hard pull.",
+   "hero": "Indigo offers pre-qualification with no hard credit pull \u2014 check whether you are likely approved before any inquiry hits your file.",
+   "angle": "prequal",
+   "dep": "$0",
+   "fee": "$0 first year, then $75 (varies by offer)",
+   "depNote": "Unsecured \u2014 no deposit required",
+   "warn": "Annual fee $0 first year, then $75+ (varies by offer)",
+   "body": {
+    "hook": [
+     "The scariest part of rebuilding is not denial \u2014 it is another hard inquiry on a file that cannot afford one. Indigo's pre-qualification answers the question first: see whether you are likely approved, with no score impact, before you decide.",
+     "For people who have been burned by repeated applications, that order of operations \u2014 check, then apply \u2014 is the whole value proposition."
+    ],
+    "how": "Start with pre-qualification: a soft check that does not affect your score. If the odds look good, complete the application (that step does involve a hard pull). The card is unsecured with no deposit; annual fee depends on the offer you are pre-qualified for \u2014 some are $0 the first year, others carry $75+ thereafter. Payments report to all three bureaus.",
+    "fit": [
+     "Want to test approval odds without a hard inquiry",
+     "Fair or rebuilding credit with some history",
+     "Prefer unsecured over deposit"
+    ],
+    "nofit": [
+     "Can fund a deposit \u2014 $0-fee secured cards are cheaper over time",
+     "No score at all (no-credit-check secured cards fit better)",
+     "Want rewards (Quicksilver Secured)"
+    ],
+    "compare": "Versus Credit One Platinum: both unsecured with annual fees, but Indigo's pre-qualification flow lets you see odds without any score impact \u2014 valuable when your file is fragile. Versus secured options: fees make Indigo more expensive long-term; the deposit path returns its cost."
+   },
+   "faq": [
+    [
+     "Does checking or applying hurt my credit score?",
+     "Pre-qualification is a soft pull \u2014 no impact. Completing a full application does involve a hard inquiry."
+    ],
+    [
+     "What credit score do I need?",
+     "Designed for fair to rebuilding credit; the pre-qualification tells you where you stand before applying."
+    ],
+    [
+     "How long does it take to build credit with this card?",
+     "Reporting starts with the first cycle; typical movement within 3\u20136 months of on-time payments."
+    ],
+    [
+     "What happens to my deposit?",
+     "No deposit \u2014 this card is unsecured. Costs come from the annual fee structure of your offer."
+    ],
+    [
+     "Can I be denied?",
+     "Yes, even after pre-qualification \u2014 pre-qual is directional, not a guarantee. Final approval depends on the full underwriting check."
+    ]
+   ],
+   "grad": "n/a"
+  },
+  "self-secured-visa": {
+   "key": "self",
+   "name": "Self Secured Visa\u00ae",
+   "network": "VISA",
+   "h1": "Build credit without cash upfront \u2014 the loan does the deposit.",
+   "hero": "The Self Secured Visa uses your Self Credit Builder Account as the security deposit \u2014 no extra cash needed to start building with a real card.",
+   "angle": "loan-hybrid",
+   "dep": "$0 (loan-funded)",
+   "fee": "$25/yr (varies)",
+   "depNote": "Funded by your Credit Builder Account savings",
+   "body": {
+    "hook": [
+     "The cruelest joke in credit building: the cards that help you the most demand money you do not have. Self solved it by joining two products \u2014 the credit-builder loan you may already be paying into becomes the security deposit for a real Visa card.",
+     "No lump sum. No new savings goal. The building blocks you set up for your score become the collateral for spending power."
+    ],
+    "how": "If you have (or open) a Self Credit Builder Account, once you accumulate $100 or more in savings progress, you can unlock the Secured Visa against it \u2014 no additional deposit. Payments report to all three bureaus. You manage spending against your loan savings; the $25 annual fee is modest, and the account doubles as a forced-savings mechanism.",
+    "fit": [
+     "No cash for a deposit right now",
+     "Already in (or open to) a credit-builder loan",
+     "Want savings discipline alongside credit building"
+    ],
+    "nofit": [
+     "Want a full credit line immediately (secured deposits give bigger lines)",
+     "Already have $200+ to deposit (Discover/CapOne offer rewards or free paths)",
+     "Do not want any loan product"
+    ],
+    "compare": "Versus OpenSky: OpenSky needs $100+ cash but no loan relationship and handles bankruptcy cases more directly; Self needs no cash but requires the loan structure. For $0-upfront rebuilding, Self is the cleanest hybrid."
+   },
+   "faq": [
+    [
+     "Does checking or applying hurt my credit score?",
+     "Checking eligibility inside your Self account is a soft process; the card application itself may involve a credit check. The Credit Builder Account itself reports as an installment loan \u2014 a score positive over time."
+    ],
+    [
+     "What credit score do I need?",
+     "The loan plus card structure is designed for no-score and rebuilding profiles \u2014 eligibility is driven by your Self account progress, not a score minimum."
+    ],
+    [
+     "How long does it take to build credit with this card?",
+     "You are building two ways at once \u2014 installment loan plus card payments. Expect visible movement in 3\u20136 months of on-time activity."
+    ],
+    [
+     "What happens to my deposit?",
+     "It is your own loan savings \u2014 at loan completion the money is yours, minus fees."
+    ],
+    [
+     "Can I be denied?",
+     "Yes \u2014 mainly if your Self account is too new or progress is below the threshold."
+    ]
+   ],
+   "grad": "via loan completion",
+   "warn": null
+  },
+  "upgrade-card": {
+   "key": "upgrade",
+   "name": "Upgrade Card",
+   "network": "VISA",
+   "h1": "A card that behaves like a loan \u2014 fixed payments, no surprises.",
+   "hero": "The Upgrade Card turns your balance into fixed-installment payments \u2014 build credit through predictable monthly payments instead of revolving debt.",
+   "angle": "card-plus-loan",
+   "dep": "$0",
+   "fee": "No annual fee",
+   "depNote": "Unsecured \u2014 no deposit required",
+   "body": {
+    "hook": [
+     "Revolving credit is where rebuilders get hurt: a balance that lingers, interest that snowballs, a score that dips with utilization. The Upgrade Card redesigns the mechanics \u2014 every balance you carry becomes a fixed-payment installment plan, reported as personal loans, not revolving debt.",
+     "For people who got into trouble precisely because credit cards are too flexible, the rigidity is the feature."
+    ],
+    "how": "Apply once; if approved you get a line you draw against. Each draw becomes an installment with fixed monthly payments and a fixed payoff date. On-time payments report to all three bureaus. There is no annual fee; APR depends on your credit profile at approval. Because utilization on the card does not swing your score the way revolving balances do, the score path is calmer.",
+    "fit": [
+     "Prefer fixed payments over revolving flexibility",
+     "Rebuilding with steady income",
+     "Want credit-building without deposit"
+    ],
+    "nofit": [
+     "Want traditional swipe-anywhere rewards (Quicksilver Secured)",
+     "No score and no income (secured no-check options first)",
+     "Active bankruptcy (OpenSky)"
+    ],
+    "compare": "Versus the Self Secured Visa: both add installment-style reporting, but Upgrade gives you spending power now with no savings account; Self builds savings first. Upgrade suits earners; Self suits savers-in-training."
+   },
+   "faq": [
+    [
+     "Does checking or applying hurt my credit score?",
+     "Checking your offer uses a soft pull. Accepting and drawing involves a hard inquiry for most applicants."
+    ],
+    [
+     "What credit score do I need?",
+     "Upgrade targets fair-and-better profiles (roughly 560+ in practice). Poor/no credit usually starts with secured or no-check products."
+    ],
+    [
+     "How long does it take to build credit with this card?",
+     "Installment history builds steadily \u2014 expect measurable impact over 6+ months of on-time payments."
+    ],
+    [
+     "What happens to my deposit?",
+     "There is no deposit \u2014 the product is unsecured with fixed installment draws."
+    ],
+    [
+     "Can I be denied?",
+     "Yes \u2014 underwriting is income- and history-based, stricter than no-check secured cards."
+    ]
+   ],
+   "grad": "via on-time installments",
+   "warn": null
+  },
+  "fast-credit-limit-increase": {
+   "key": "capone49",
+   "name": "Fast Credit Limit Increase \u2014 Which Card Grows Quickest",
+   "network": "VISA",
+   "h1": "Which secured card raises your limit fastest (and why it matters).",
+   "hero": "Credit line growth is the quiet lever of credit building \u2014 lower utilization, higher scores. Here is how fast each major secured card actually grows.",
+   "angle": "cli-guide",
+   "dep": "varies",
+   "fee": "varies",
+   "depNote": "Editorial guide",
+   "comparison": true,
+   "body": {
+    "hook": [
+     "Two builders pay on time every month. Six months later one has a $2,000 limit and a 760 score; the other is stuck at $200 and 640. The difference is not discipline \u2014 it is which card they picked, because issuers grow limits at very different speeds.",
+     "Utilization (balance \u00f7 limit) is roughly 30% of your score. A $50 balance is 25% of a $200 line but 3% of a $1,700 line. Same spending, wildly different score math."
+    ],
+    "how": "Three growth patterns matter. (1) Capital One Platinum Secured: after 6 months of on-time payments, Capital One reviews and may add line without extra deposit \u2014 the fastest no-effort grower. (2) Discover it Secured: automatic reviews begin at 7 months and can graduate you to unsecured entirely, returning your deposit. (3) OpenSky and similar subprime issuers: manual requests, slower growth, or none \u2014 you get what you fund.",
+    "fit": [
+     "Choosing between secured cards by growth speed",
+     "Already have a secured card and want a raise",
+     "Planning the rebuild arc end-to-end"
+    ],
+    "nofit": [
+     "Looking for rewards comparison (see our zero-fee guide)",
+     "No card yet and no deposit (start with the quiz)"
+    ],
+    "compare": "Fastest no-effort growth: Capital One (6-month review). Fastest exit to unsecured: Discover (7-month reviews). Slowest: subprime issuers with manual-only increases. The meta-lesson: pick the issuer whose growth pattern matches your timeline."
+   },
+   "faq": [
+    [
+     "Does asking for a credit limit increase hurt my score?",
+     "Some issuers run a hard pull for CLI requests; automatic reviews do not. Capital One and Discover automatic reviews are soft \u2014 no score impact."
+    ],
+    [
+     "What credit score do I need?",
+     "CLI approvals track your payment history on the card more than your score \u2014 6 months of on-time payments is the real threshold."
+    ],
+    [
+     "How long does it take to build credit with a higher limit?",
+     "Utilization improves immediately when a limit rises; the score effect typically shows in the next reporting cycle."
+    ],
+    [
+     "What happens to my deposit when my limit grows?",
+     "On secured cards, either you fund the increase (deposit grows) or the issuer adds unsecured line on top \u2014 Discover and Capital One do the latter on strong accounts."
+    ],
+    [
+     "Can I be denied a limit increase?",
+     "Yes \u2014 late payments, high utilization, or a too-new account all lead to denials. Wait for the automatic review."
+    ]
+   ],
+   "grad": "varies by issuer",
+   "warn": null
+  },
+  "discover-student": {
+   "key": "discover",
+   "name": "Discover it\u00ae Student",
+   "network": "DISCOVER",
+   "h1": "Student? This is the rare card that says yes without a history.",
+   "hero": "The Discover it\u00ae Student accepts limited credit with student-friendly underwriting \u2014 5% rotating cash back, no annual fee, and a free FICO score in the app.",
+   "angle": "student",
+   "dep": "$0",
+   "fee": "$0",
+   "depNote": "Unsecured \u2014 no deposit required",
+   "body": {
+    "hook": [
+     "Students face a paradox: no card means no history, no history means no card. Issuer student cards break the loop by underwriting on enrollment and income rather than score \u2014 and Discover's student card is the most generous of the category: real rewards, no annual fee, and a score tracker built in.",
+     "Start in college and you graduate with 4+ years of payment history \u2014 the single largest score factor \u2014 already banked."
+    ],
+    "how": "Apply with proof of enrollment and some income (scholarships and part-time work count). If approved, you get an unsecured line with 5% cash back in rotating quarterly categories (activation required) and 1% on everything else \u2014 first-year cash back matched automatically. No annual fee, no penalty APR on the first late payment (a genuinely useful grace for first-time cardholders), and free FICO score monitoring.",
+    "fit": [
+     "Enrolled student with any income source",
+     "First credit card ever",
+     "Want rewards without a deposit"
+    ],
+    "nofit": [
+     "Not enrolled (secured cards are the path)",
+     "Want a flat rate with no category tracking (Quicksilver-style)",
+     "Rebuilding with negatives (student underwriting is for clean thin files)"
+    ],
+    "compare": "Versus the Chime Credit Builder: Chime is easier to get (no check) but builds no rewards and needs the checking account. The student card pays more and costs nothing, but requires enrollment \u2014 graduation from student status means applying again for a standard card."
+   },
+   "faq": [
+    [
+     "Does checking or applying hurt my credit score?",
+     "Pre-qualification is available with a soft check. Applying involves a hard inquiry \u2014 but for students, a single inquiry at the start of a long file is a small cost."
+    ],
+    [
+     "What credit score do I need?",
+     "There is no published minimum \u2014 underwriting weighs enrollment and income. Many approvals happen with no score at all."
+    ],
+    [
+     "How long does it take to build credit with this card?",
+     "First-cycle reporting. Students who start freshman year typically graduate with strong prime-ready files."
+    ],
+    [
+     "What happens to my deposit?",
+     "No deposit \u2014 unsecured. The card may upgrade or convert as your profile matures."
+    ],
+    [
+     "Can I be denied?",
+     "Yes \u2014 typically for insufficient income or enrollment verification failure."
+    ]
+   ],
+   "grad": "n/a (unsecured)",
+   "warn": null
+  },
+  "chime-credit-builder": {
+   "key": "chime",
+   "name": "Chime Credit Builder",
+   "network": "VISA",
+   "h1": "No history? No problem. No fee, either.",
+   "hero": "The Chime Credit Builder Visa\u00ae has no annual fee, no credit check to apply, and reports to all three bureaus \u2014 the simplest way to start a score from zero.",
+   "angle": "no-fee-start",
+   "dep": "$0 (spend from your own money)",
+   "fee": "$0",
+   "depNote": "You move your own money to the card as you spend",
+   "grad": "secured\u2192unsecured via CLI",
+   "warn": null,
+   "body": {
+    "hook": [
+     "Starting from zero is its own kind of trap: no card means no history, and no history means most issuers will not look at you twice. The Chime Credit Builder was designed for exactly that door \u2014 no credit check to apply, no annual fee, and a spend-only design that makes overspending impossible.",
+     "Instead of a deposit that sits locked, Chime moves money from your Chime checking account to the card as you spend it. There is no interest and no balance to carry \u2014 the card can only spend what you moved. Payments report to all three bureaus like any card, which is where the score comes from."
+    ],
+    "how": "Open a Chime checking account with a qualifying direct deposit, then request the Credit Builder card in the app \u2014 no credit check involved. Move money into the Credit Builder account when you want spending power; the card draws only from that. Each swipe is reported as a payment (because you are effectively paying as you go), and on-time reporting builds the file. Turn on AutoPay in the app so the reporting never slips.",
+    "fit": [
+     "No credit history at all",
+     "Want a $0-fee start with zero overspend risk",
+     "Have (or will open) a Chime checking account"
+    ],
+    "nofit": [
+     "Do not want a bank account (OpenSky works without one)",
+     "Want rewards immediately (Quicksilver Secured)",
+     "Need a large credit line fast (secured deposits give bigger lines)"
+    ],
+    "compare": "Versus the Capital One Platinum Secured: Capital One gives a real credit line from $49 with a major-bank approval process; Chime is easier (no check) but your line equals whatever you moved that month. Chime wins on total cost and safety; Capital One wins on line size and graduation path."
+   },
+   "faq": [
+    [
+     "Does this card hurt my credit score?",
+     "There is no credit check to apply, so no hard inquiry. Missed payments would be reported \u2014 AutoPay prevents that."
+    ],
+    [
+     "What credit score do I need?",
+     "None. Approval does not depend on score \u2014 only a Chime checking account with qualifying direct deposit."
+    ],
+    [
+     "How long does it take to build credit with this card?",
+     "Payment history is the largest score factor; many builders see movement after 3\u20136 months of on-time reporting."
+    ],
+    [
+     "What happens to my deposit?",
+     "There is no locked deposit \u2014 you move your own money to the card as you spend, so it stays yours throughout."
+    ],
+    [
+     "Can I be denied?",
+     "Yes, mainly if the checking account or direct deposit requirements are not met \u2014 not for score reasons."
+    ]
+   ]
+  }
+ },
+ "EDITORIAL": {
+  "secured-vs-credit-builder-loan": {
+   "h1": "Secured card or credit-builder loan \u2014 which builds faster?",
+   "hero": "Both build credit without a traditional card approval. They work on different mechanics, cost different amounts, and suit different situations. Here is the honest comparison.",
+   "body": {
+    "hook": [
+     "You know you need credit history. You do not know which tool to start with. Secured cards and credit-builder loans are the two standard answers \u2014 and they are not interchangeable.",
+     "A secured card gives you spending power immediately and builds revolving history \u2014 the category most of your score cares about. A credit-builder loan locks your money in a savings account and reports installment history \u2014 no spending temptation, but no spending power either."
+    ],
+    "how": "Secured card: fund a refundable deposit ($49\u2013$200 typically), spend small, pay in full \u2014 revolving history reports monthly. Credit-builder loan: the lender places your loan amount in a locked savings account; you pay fixed monthly installments for 12\u201324 months, then receive the savings \u2014 installment history reports monthly. The Self Secured Visa merges both: your loan savings become a card deposit.",
+    "fit": [
+     "Card: you have $49\u2013$200 and want spending power",
+     "Loan: you cannot risk overspending while rebuilding",
+     "Self hybrid: you want both without choosing"
+    ],
+    "nofit": [
+     "Card: you have $0 and no discipline risk \u2014 wait, that is the loan's job",
+     "Loan: you need a card for deposits, hotels, car rentals now"
+    ],
+    "compare": "Score mechanics differ: revolving utilization vs installment mix. Ideally you eventually have both \u2014 the loan adds account-mix (10% of score) while the card builds the core payment history. Cost: secured cards with $0 fee (Chime, Capital One) beat loan interest/fees; loans win on forced savings.",
+    "pitfalls": "If you can only pick one today, pick by risk profile rather than by score math: if overspending is what damaged your credit, the loan's locked structure protects you from yourself while history accumulates; if your spending is already disciplined, the card starts building the revolving category immediately and gives you spending utility. The hybrid (Self) exists precisely because many rebuilders want both and can only afford one payment stream. Cost comparison over 24 months: a $0-fee secured card costs $0 (deposit returned); a typical credit-builder loan costs $25\u201390 in fees/interest over its life; a $0-deposit unsecured card (Credit One, Indigo) costs $150\u2013198. Cheapest is not always fastest \u2014 but fastest is rarely free.",
+    "steps": "Practical next step: check your current file before choosing. If you have zero accounts reporting, the loan adds an installment line to an empty report (diversity from day one). If one card already reports, the loan adds mix while a second card mostly deepens utilization headroom. The quiz routes on exactly this distinction."
+   },
+   "faq": [
+    [
+     "Does checking or applying hurt my credit score?",
+     "Secured card pre-qualification is soft; loan applications vary \u2014 Self and most credit-builder lenders use soft checks for approval."
+    ],
+    [
+     "What credit score do I need?",
+     "Neither product requires a minimum score \u2014 both exist for no-score and rebuilding profiles."
+    ],
+    [
+     "How long does it take to build credit with this card?",
+     "Both report monthly from the first cycle; expect meaningful movement in 3\u20136 months."
+    ],
+    [
+     "What happens to my deposit?",
+     "Secured card deposits refund on upgrade or closure in good standing; loan \"deposits\" are your own savings returned at completion."
+    ],
+    [
+     "Can I be denied?",
+     "Yes for cards (identity, income); credit-builder loans have the highest approval rates of any credit product."
+    ]
+   ]
+  },
+  "best-zero-fee-secured-cards": {
+   "h1": "The $0-annual-fee secured cards, ranked honestly.",
+   "hero": "Five secured cards cost you nothing per year. We rank them by real value \u2014 graduation path, deposit size, and what they actually report.",
+   "body": {
+    "hook": [
+     "A $0 annual fee is not automatically a good deal \u2014 some free secured cards trap your deposit for years with no graduation path. The real ranking weighs three things: what the card costs (nothing), when you get out (graduation speed), and what it reports (all three bureaus, always).",
+     "After those filters, the field narrows to a handful of genuine options."
+    ],
+    "how": "Our ranking: (1) Discover it Secured \u2014 $0 fee, 2% category cash back, auto graduation reviews at 7 months, deposit back on conversion. (2) Capital One Platinum Secured \u2014 $0 fee, deposit from $49, 6-month line reviews. (3) Chime Credit Builder \u2014 $0 fee, no credit check, but requires the Chime checking account. (4) Capital One Quicksilver Secured \u2014 $0 fee, 1.5% back, $200 deposit. (5) OpenSky \u2014 $35 fee, included only because it serves no-bank and bankruptcy cases the others reject.",
+    "fit": [
+     "Anyone comparing secured cards by total cost",
+     "Rebuilders optimizing for graduation, not just approval"
+    ],
+    "nofit": [
+     "Need no-bank-account or bankruptcy-friendly approval (OpenSky, despite the fee)",
+     "Have $0 deposit (Self or Credit One \u2014 different fee structures)"
+    ],
+    "compare": "The fee trap to avoid: subprime unsecured cards advertising \"no deposit\" with $75\u201399 annual fees (Credit One, Indigo) cost $150\u2013198 over two years \u2014 more than every card on this list. The deposit path returns its money; the fee path does not.",
+    "pitfalls": "The one trap this ranking guards against: cards that advertise \"$0 deposit\" or \"guaranteed\" while charging $75\u201399 annually. Over a two-year rebuild, those fees total $150\u2013198 \u2014 more than every card on this list costs combined. The deposit path costs nothing at graduation; the fee path never returns a cent. Another quiet differentiator: reporting completeness. All five cards report to all three bureaus, but Chime's spend-only design reports payments differently \u2014 the score effect is equivalent, but utilization modeling differs because there is no fixed line.",
+    "steps": "Practical next step: run the numbers on your own rebuild \u2014 total cost = (annual fee \u00d7 years) + (deposit you cannot touch). A card that looks expensive per month but returns its deposit at graduation usually wins the two-year math. The quiz applies these same criteria to your deposit budget automatically."
+   },
+   "faq": [
+    [
+     "Does checking or applying hurt my credit score?",
+     "All five cards offer soft-check pre-qualification or no-check application \u2014 checking costs nothing."
+    ],
+    [
+     "What credit score do I need?",
+     "None of the five has a hard minimum; OpenSky and Chime perform no credit check at all."
+    ],
+    [
+     "How long does it take to build credit with this card?",
+     "All report monthly from the first cycle; 3\u20136 months of on-time payments is the standard arc."
+    ],
+    [
+     "What happens to my deposit?",
+     "All are refundable on good-standing closure or upgrade \u2014 Chime is the exception by design (you spend your own deposited funds)."
+    ],
+    [
+     "Can I be denied?",
+     "Yes on all \u2014 but approval rates are highest for the no-credit-check options (Chime, OpenSky)."
+    ]
+   ]
+  },
+  "secured-cards-under-100-deposit": {
+   "h1": "Secured cards under $100 deposit \u2014 the real list.",
+   "hero": "Most secured cards want $200. Four genuine options start below $100 \u2014 here is what each trade costs you.",
+   "body": {
+    "hook": [
+     "The $200 minimum is the most common wall in credit rebuilding. Below $100, the options narrow fast \u2014 and one of them is not what it appears. Here is the honest list of cards that start under $100.",
+     "Spoiler: the cheapest deposit is rarely the cheapest card."
+    ],
+    "how": "The list: (1) Capital One Platinum Secured \u2014 deposit from $49 (Capital One assigns $49/$99/$200 by approval); $0 annual fee; no rewards; 6-month line reviews. (2) Chime Credit Builder \u2014 $0 deposit (you move money as you spend); requires the Chime checking account; no credit check. (3) OpenSky \u2014 $100 minimum (right at the line); $35 fee; no credit check, bankruptcy-friendly. (4) Self Secured Visa \u2014 no cash deposit (loan-funded); requires the Credit Builder Account.",
+    "fit": [
+     "Budgets under $100 for one-time deposit",
+     "No bank account (OpenSky) or no cash (Self/Chime)",
+     "First-ever card"
+    ],
+    "nofit": [
+     "Want rewards \u2014 under-$100 options skip rewards by design",
+     "Want big credit lines immediately (deposit size = line size)"
+    ],
+    "compare": "Capital One is the best pure value under $100 ($0 fee, major bank). Chime wins for zero total cost if the checking account works for you. OpenSky is the fallback when the first two doors close. Avoid \"low deposit\" offers from subprime issuers with annual fees \u2014 the fee eats the deposit advantage within a year.",
+    "pitfalls": "A practical warning: \"low deposit\" offers from subprime issuers usually hide annual fees that erase the deposit advantage within the first year. If a card under $100 deposit carries a $75+ fee, the math is worse than saving another month to fund a $0-fee option. Also worth knowing: deposit size equals credit line, so a $49 line means a $15 grocery run is 30% utilization. Two mitigations exist \u2014 pay before the statement date (the reported balance is what matters), or grow the line via Capital One's 6-month review. Budget builders should treat the first deposit as a floor, not a ceiling.",
+    "steps": "Practical next step: if your budget is fixed under $100, decide which constraint binds first \u2014 the deposit itself, the bank account requirement, or the annual fee. Each of the four cards above removes exactly one constraint; matching your binding constraint to the right card matters more than any feature comparison."
+   },
+   "faq": [
+    [
+     "Does checking or applying hurt my credit score?",
+     "Chime and OpenSky apply with no credit check; Capital One pre-qualification is a soft pull."
+    ],
+    [
+     "What credit score do I need?",
+     "No minimums on any of the four \u2014 deposit funding and identity verification drive approval."
+    ],
+    [
+     "How long does it take to build credit with this card?",
+     "All report monthly; 3\u20136 months of on-time activity is the standard movement window."
+    ],
+    [
+     "What happens to my deposit?",
+     "Refundable in all cases \u2014 Chime's is your own spendable money by design."
+    ],
+    [
+     "Can I be denied?",
+     "Yes \u2014 Capital One and Self underwrite; Chime and OpenSky deny mainly on identity/funding verification."
+    ]
+   ]
+  }
+ }
+}

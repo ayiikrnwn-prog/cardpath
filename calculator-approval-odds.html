@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Approval Odds Calculator — CardPath</title>
+<meta name="description" content="Estimate your approval odds for popular secured and credit-builder cards. Based on public issuer criteria. Free, no credit score impact.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="disclosure">Editorial content only. We may earn a commission from partners. Rates &amp; fees may change.</div>
+<header class="topbar">
+  <div class="logo">Card<span class="dot">Path</span></div>
+  <nav>
+    <a data-fwd href="index.html">Home</a><a data-fwd href="index.html#guides">Guides</a>
+    <a data-fwd href="quiz.html">Quiz</a>
+    <a data-fwd href="quiz.html" class="nav-cta">Find My Card</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <section class="hero" style="padding-bottom:6px">
+    <div class="eyebrow">Calculator</div>
+    <h1 style="font-size:clamp(26px,4vw,36px)">Approval odds, before you apply.</h1>
+    <p class="sub">Three inputs. See where you stand with four popular starter cards — and apply in the smartest order.</p>
+  </section>
+
+  <section>
+    <div class="quiz-shell" style="max-width:720px">
+      <form id="calc-odds-form">
+        <div class="quiz-opts" style="gap:16px">
+          <div>
+            <label for="co-score" style="display:block;font-size:13px;color:var(--ink-3);margin-bottom:6px">CREDIT SCORE SITUATION</label>
+            <select id="co-score" style="width:100%;padding:13px 14px;font-size:16px;border:1.5px solid var(--hairline);border-radius:10px">
+              <option value="none">No score yet</option>
+              <option value="bad">Below 580</option>
+              <option value="fair">580–669</option>
+              <option value="good">670+</option>
+            </select>
+          </div>
+          <div>
+            <label for="co-denied" style="display:block;font-size:13px;color:var(--ink-3);margin-bottom:6px">DENIED A CARD BEFORE?</label>
+            <select id="co-denied" style="width:100%;padding:13px 14px;font-size:16px;border:1.5px solid var(--hairline);border-radius:10px">
+              <option value="0">No</option>
+              <option value="1">Yes</option>
+            </select>
+          </div>
+          <div>
+            <label for="co-deposit" style="display:block;font-size:13px;color:var(--ink-3);margin-bottom:6px">MAX DEPOSIT BUDGET ($)</label>
+            <input id="co-deposit" type="number" min="0" max="5000" value="200" inputmode="numeric"
+              style="width:100%;padding:13px 14px;font-size:16px;border:1.5px solid var(--hairline);border-radius:10px">
+          </div>
+          <button class="cta full" type="submit">Show My Odds →</button>
+        </div>
+      </form>
+
+      <div id="co-out" class="alts" style="display:none;margin-top:22px"></div>
+
+      <p class="disclaimer-sm">Estimates are based on publicly available approval criteria compiled from issuer disclosures — not a guarantee or pre-approval. Applying does involve a hard credit check at the issuer. Educational content only, not financial advice.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="fine">CardPath is an independent educational resource, not a lender or issuer. © 2026 CardPath.</p>
+  </div>
+</footer>
+<script src="app.js"></script>
+</body>
+</html>
