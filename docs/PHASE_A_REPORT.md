@@ -178,3 +178,25 @@ Audit akhir dengan simulasi user penuh (real API production, semua endpoint nyat
 **VERDICT: ALL PASS.** Q9 fix (quizSubmitServer definition) terverifikasi — klik Q9 kini submit ke server, tidak crash.
 
 Catatan QA proses: bug FB4 lolos karena verifikasi hanya endpoint + served-content, bukan eksekusi klik UI end-to-end (browser automation tidak tersedia di env; jsdom scope-limited). Mitigasi: checklist QA kini mencakup grep "fungsi dipanggil vs fungsi didefinisikan" untuk app.js — ditemukan & diperbaiki di audit ini.
+
+---
+
+# ADDENDUM 6 (27 Okt) — Feedback Shelby: token mentah terlihat di URL SUB2 — FIXED
+
+### Gejala
+Setelah jump ke cardpath.seputar-ntt.com, URL menampilkan token HMAC mentah (base64 panjang) — terlihat seperti "parameter rusak".
+
+### Akar
+FB1 redirect membawa `t={token}` di URL — perlu untuk verifikasi SUB2, tapi token base64 memang tidak enak dilihat & bocor ke referrer.
+
+### Fix (v4.3.1)
+1. D1: tabel baru `results` (lid PK → token) — token disimpan server-side saat /api/quiz.
+2. SUB1 redirect: URL P1 bersih — hanya `lid, cp, cq_match, o, g, utm` (g=1 = gate lunas). TANPA token.
+3. SUB2 verifikasi: `/api/validate?lid=...` (server lookup token by lid, tetap HMAC-verified — tidak bisa dipalsukan). Backward-compat `?t=` tetap jalan.
+4. P1 badge personal kini verifikasi via lid.
+
+### Verifikasi
+- URL jump bersih (0 base64) ✓ · /api/validate?lid=True ✓ · P1 200 + badge ✓ · backward-compat t= ✓ · D1 results tersimpan ✓
+
+### Note D1 migration
+Tabel `results` dibuat via wrangler d1 execute --remote (3 rows_written termasuk CREATE).
