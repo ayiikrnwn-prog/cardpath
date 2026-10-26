@@ -135,3 +135,10 @@
 **Pelajaran**: saat satu domain di-bind ke worker salah, proxy per-file menyisakan lubang (asset relative path). Solusi benar: serve sub-site inline dari worker yang di-bind, dengan folder + cache-key terpisah.
 
 **Menunggu: GAM input Shelby (Fase B).**
+
+### FB3 (27 Okt, testing Shelby) — tombol "Show my match" dead-end
+- **Gejala**: di akhir quiz SUB1, tombol "Show my match →" (dengan input email) tidak berfungsi.
+- **Akar**: quiz SUB1 masih membawa EMAIL STEP dari v3 (email ditanya di quiz) + gate result meminta email lagi = dobel email prompt; dari sisi user terasa "tombol mati" karena setelah submit pertama, alur berpindah ke gate yang meminta email sekali lagi.
+- **Fix**: email step di quiz DIHAPUS di SUB1 — quiz 9 pertanyaan → langsung result gate (email 1x, server-first) → klik "Send My Match Report" → redirect SUB2 match card.
+- **Pelajaran**: saat memindahkan flow antar-sub, langkah legacy (email step v3) harus di-audit dan dihapus — bukan dibiarkan hidup berdampingan dengan mekanisme baru (gate).
+- **Verifikasi**: served card. /sub1/app.js fresh (email step disabled + quizSubmitServer + FB1 redirect), /api/quiz & /api/email PASS.
