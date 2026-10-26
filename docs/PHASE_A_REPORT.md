@@ -142,3 +142,16 @@
 - **Fix**: email step di quiz DIHAPUS di SUB1 — quiz 9 pertanyaan → langsung result gate (email 1x, server-first) → klik "Send My Match Report" → redirect SUB2 match card.
 - **Pelajaran**: saat memindahkan flow antar-sub, langkah legacy (email step v3) harus di-audit dan dihapus — bukan dibiarkan hidup berdampingan dengan mekanisme baru (gate).
 - **Verifikasi**: served card. /sub1/app.js fresh (email step disabled + quizSubmitServer + FB1 redirect), /api/quiz & /api/email PASS.
+
+---
+
+# ADDENDUM 4 (27 Okt) — CRITICAL: Q9 klik crash — FIXED
+
+### FB4 — tombol Q9 "Main goal" tidak bisa diklik (testing Shelby)
+- **Gejala**: di Q9 (pertanyaan terakhir), klik tidak menghasilkan apa-apa.
+- **Akar (CRITICAL)**: `quizSubmitServer()` dipanggil oleh quizShowResult TAPI fungsi tersebut **tidak pernah terdefinisi** di app.js — patch helper A3 (server-first submit) tidak ikut tersimpan saat patch berantai (persis pola kasus FB2 di SUB2: patch didefinisikan di variabel tapi write tidak lengkap). Klik Q9 → `quizShowResult(false)` → `quizSubmitServer(...)` → **ReferenceError** → flow mati → UI beku di Q9.
+- **Kenapa lolos QA**: semua test saya verifikasi lewat endpoint + served-content, bukan eksekusi klik UI end-to-end di browser (browser_exec daemon gagal di env ini; jsdom tidak bisa memuat quiz flow penuh karena scope). Pelajaran: fungsi yang dipanggil wajib diverifikasi DEFINISINYA ada — grep panggilan saja tidak cukup.
+- **Fix**: definisi `quizSubmitServer` dikembalikan (POST /api/quiz → HMAC token → redirect result) + fallback offline (bila API gagal → redirect result dengan scoring client — resilience).
+- **Verifikasi**: served card. /sub1/app.js berisi `function quizSubmitServer` ✓; /api/quiz real PASS ✓; FB1 redirect & gate 1x tetap utuh ✓.
+
+**Diperbaiki & deployed (farm 3ff8e4f + worker 585e936). Shelby re-test dengan hard refresh.**
