@@ -118,3 +118,20 @@
 - P1 (18 money pages) tambah badge personal "✓ Based on your quiz" via /api/validate — bukti personalisasi terverifikasi server.
 
 **Semua deployed (worker farm 492b508f + cardpath cbf08947). Menunggu: GAM input Shelby (Fase B).**
+
+---
+
+# ADDENDUM 3 (27 Okt) — Feedback Shelby round 2 — FIXED
+
+### Case 1 (email 1x) — VERIFIED FIXED oleh Shelby ✓
+### Case 2 — match card masih tampil di SUB1
+- **Gejala**: setelah klik "check match card" + isi email, match tetap dirender di card.seputar-ntt.com — tidak pindah ke SUB2.
+- **Akar (2 lapis)**:
+  1. FB1 redirect (pasca-email → SUB2 P1) sudah ada di app.js farm, TAPI domain card.* ter-bind ke worker `cardpath` (SUB2) — dan app.js yang diserve di card. berasal dari assets SUB2 (stale, tanpa FB1). Proxy sebelumnya hanya menyalurkan /start/* — app.js relative path masih jatuh ke assets SUB2.
+  2. CF edge cache custom domain menyimpan app.js lama (cache-buster pun stale — bukan edge cache biasa, melainkan worker binding yang salah).
+- **Fix final**: buang proxy — worker cardpath sekarang **menyajikan quiz flow inline utk hostname card.*** dari folder `public/sub1/*` (assets copy dengan cache key baru: /sub1/app.js — pasti fresh), API /api/quiz|email|validate|track di worker yang sama (endpoint identik, D1 sama). 301 /start/* hanya utk hostname cardpath.* (legacy).
+- **Verifikasi production**: quiz page CP_SUB=sub1 + /sub1/app.js (FB1 aktif) → /api/quiz → email → FB1 redirect → SUB2 P1 200 + badge token ✓.
+
+**Pelajaran**: saat satu domain di-bind ke worker salah, proxy per-file menyisakan lubang (asset relative path). Solusi benar: serve sub-site inline dari worker yang di-bind, dengan folder + cache-key terpisah.
+
+**Menunggu: GAM input Shelby (Fase B).**
