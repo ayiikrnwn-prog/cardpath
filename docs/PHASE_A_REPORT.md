@@ -200,3 +200,24 @@ FB1 redirect membawa `t={token}` di URL — perlu untuk verifikasi SUB2, tapi to
 
 ### Note D1 migration
 Tabel `results` dibuat via wrangler d1 execute --remote (3 rows_written termasuk CREATE).
+
+---
+
+# ADDENDUM 8 (27 Okt) — Feedback Shelby: landing SUB2 = carousel dulu — FIXED
+
+### Feedback
+Landing setelah email harus masuk **match carousel** (slide kiri/kanan = pindah page) di SUB2; klik "Continue to your matched card" baru masuk P1 single card → "See how to request card" (P2).
+
+### Fix (v4.3.2)
+1. SUB1 FB1 redirect target: P1 → **`/results.html`** (SUB2) — carousel top-3 dengan slide antar-halaman.
+2. SUB2 results: server-driven — `/api/validate?lid=` kini mengembalikan **top3 + odds per kartu** (dari D1 results meta); results render dari data server (signed), bukan client engine.
+3. slideHref: bawa `g=1` + `lid` — slide antar-halaman tanpa re-gate.
+4. Konsistensi: SUB2 worker `/api/quiz` return top3 `[{k,o}]` (odds per kartu, sama seperti farm).
+
+### Bug ditemukan & fix saat implementasi (case-by-case)
+- **TDZ silent-fail**: INSERT results awalnya ditempatkan SEBELUM `top3o` didefinisikan → ReferenceError tertelan try/catch → results tak tersimpan → validate?lid 400. Fix: pindahkan INSERT setelah top3o. (Pelajaran: try/catch silent menyembunyikan TDZ — jangan bungkus blok yang mereferensikan konstanta yang belum didefinisikan.)
+
+### Verifikasi (production, real API)
+quiz → top3 [{k,o}] ✓ → email D1 ✓ → **validate?lid: valid + top3 + odds per kartu** ✓ → results.html 200 ✓ → P1 200 ✓ → /go 302 issuer ✓
+
+**Menunggu: GAM input Shelby (Fase B).**
