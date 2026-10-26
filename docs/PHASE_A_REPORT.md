@@ -95,3 +95,26 @@
 - **Verifikasi**: journey production penuh PASS — card./api/quiz (quicksilver, fit 47 intent 35 JUMP) → /api/email D1 → SUB2 P1 200 → validate token True → /go 302 capitalone param utuh.
 - **Pelajaran**: custom domain binding harus dicek worker-nya (hostname → service), bukan diasumsikan. Saat domain salah bind, proxy-by-hostname memperbaiki UX tanpa menunggu dashboard.
 - **Note untuk Shelby (opsional)**: pindahkan custom domain `card.seputar-ntt.com` dari worker `cardpath` ke `cardpath-farm` di dashboard agar arsitektur bersih — flow tetap jalan walau tidak dipindah (proxy menangani).
+
+
+---
+
+# ADDENDUM 2 (27 Okt) — Feedback testing Shelby (2 bug) — FIXED
+
+### FB1 — Email diminta 2x
+- **Gejala**: isi email di SUB1 gate → setelah itu diminta email lagi.
+- **Akar**: setelah jump ke SUB2, result/result-page SUB2 menjalankan resultsRender client yang tidak tahu gate sudah lunas (eg param tidak dibawa; token t tidak dibaca) → gate tampil lagi untuk profil email-first.
+- **Fix**: (1) SUB1: setelah email submit → **langsung redirect ke SUB2 match card** dengan token (klik-user: klik "Send My Match Report" adalah aksinya); (2) SUB2: `?t=` di URL = gate lunas (sinkron) + verifikasi HMAC async via /api/validate → tidak pernah minta email ulang; token ikut diteruskan P1→P2→/go.
+- **Verifikasi**: results.html SUB2 dengan ?t= → gate form NO ✓ match render YES ✓. Journey production penuh PASS.
+
+### FB2 — Setelah "check match card" tidak pindah ke SUB2
+- **Gejala**: setelah quiz selesai, user masih di card.seputar-ntt.com (result di SUB1).
+- **Akar**: desain lama render match di SUB1 dulu baru Continue manual ke SUB2.
+- **Fix**: sesuai ekspektasi Shelby — setelah email submit, langsung pindah ke SUB2 P1 match card (tetap klik-user: klik tombol kirim email = aksinya). Match tidak dirender lagi di SUB1.
+- **Verifikasi**: /api/email ok → location.href SUB2 P1 → 200 + badge "✓ Based on your quiz" dari token valid.
+
+### Bonus — /go konsisten server-side
+- P2 outbound kini `location.replace('/go/{key}?…')` (server 302 + D1) — bukan client GO_TARGETS lagi. t token ikut ke /go (D1 meta).
+- P1 (18 money pages) tambah badge personal "✓ Based on your quiz" via /api/validate — bukti personalisasi terverifikasi server.
+
+**Semua deployed (worker farm 492b508f + cardpath cbf08947). Menunggu: GAM input Shelby (Fase B).**
