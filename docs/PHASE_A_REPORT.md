@@ -82,3 +82,16 @@
 - Token CF: ~/.hermes/secure/cloudflare.env (tidak ter-commit, dicek 0 leak)
 
 **Menunggu persetujuan director + input Shelby untuk Fase B.**
+
+
+---
+
+# ADDENDUM (26 Okt, pasca-Shelby add domain) — kasus FaseA-C4
+
+### FaseA-C4 — Infinite 301 loop di card.seputar-ntt.com/start/*
+- **Gejala**: card./start/quiz.html → 301 → dirinya sendiri (infinite loop).
+- **Akar**: Shelby add domain card.* ke worker `cardpath` (SUB2) yang /start/*-nya 301 ke card.* = self-loop. Domain salah bind.
+- **Fix tanpa menunggu Shelby pindah domain**: worker cardpath deteksi hostname `card.*` + /start/* → **proxy ke cardpath-farm worker** (quiz flow jalan). Setelah domain dipindah ke farm (opsional, rapi), redirect legacy tetap aktif.
+- **Verifikasi**: journey production penuh PASS — card./api/quiz (quicksilver, fit 47 intent 35 JUMP) → /api/email D1 → SUB2 P1 200 → validate token True → /go 302 capitalone param utuh.
+- **Pelajaran**: custom domain binding harus dicek worker-nya (hostname → service), bukan diasumsikan. Saat domain salah bind, proxy-by-hostname memperbaiki UX tanpa menunggu dashboard.
+- **Note untuk Shelby (opsional)**: pindahkan custom domain `card.seputar-ntt.com` dari worker `cardpath` ke `cardpath-farm` di dashboard agar arsitektur bersih — flow tetap jalan walau tidak dipindah (proxy menangani).
