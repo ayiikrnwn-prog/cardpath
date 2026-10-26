@@ -240,3 +240,26 @@ Landing SUB2 results.html: tanpa carousel, CTA tidak berfungsi.
 
 ### Verifikasi (production)
 validate?lid → valid + top3 [{k,o}] ✓ · results.html 200 + app.js?v=432 ✓ · server-carousel code di served ✓ · P1 200 ✓
+
+---
+
+# ADDENDUM 11b (27 Okt) — FINAL AUDIT: full user journey via headless Chrome — VERIFIED
+
+Method: Chrome 151 headless + Playwright, real user clicks di production domain.
+
+| Step | Hasil |
+|---|---|
+| Quiz 9 pertanyaan semua bisa diklik | ✓ |
+| Email gate 1x | ✓ |
+| Landing SUB2 **carousel** (server-driven) | ✓ |
+| Slide kanan → pindah page, **nama kartu berganti** (OpenSky → OpenSky No Bank Account) | ✓ |
+| Continue → P1 (opensky-no-bank-account) + badge "✓ Based on your quiz — Match alt" | ✓ |
+| P2 → klik Apply → **sampai issuer openskycc.com** | ✓ |
+
+Fix terakhir dalam audit ini:
+1. `openskynb` CARDS name disamakan dgn opensky → slide terlihat tidak berganti. Diberi suffix "(No Bank Account)".
+2. P2 outbound `/go/{key}&…` → `&` harus `?` (21 halaman) — 404 di /go.
+3. `/api/ipstatus` ditambahkan ke worker cardpath (quiz page fetch → 404).
+4. /api/validate unknown lid/expired → 200 {valid:false} (bersihkan console noise).
+
+**FASE A TUNTAS — flow production end-to-end verified. Fase B menunggu input GAM Shelby.**
