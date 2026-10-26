@@ -221,3 +221,22 @@ Landing setelah email harus masuk **match carousel** (slide kiri/kanan = pindah 
 quiz → top3 [{k,o}] ✓ → email D1 ✓ → **validate?lid: valid + top3 + odds per kartu** ✓ → results.html 200 ✓ → P1 200 ✓ → /go 302 issuer ✓
 
 **Menunggu: GAM input Shelby (Fase B).**
+
+---
+
+# ADDENDUM 10 (27 Okt) — Feedback Shelby: carousel tidak muncul + CTA rusak di results SUB2 — FIXED
+
+### Gejala
+Landing SUB2 results.html: tanpa carousel, CTA tidak berfungsi.
+
+### Akar (2 lapis)
+1. FB1 redirect membawa `lid&cp&cq_match&o&g` — TIDAK membawa `m&o&f&i` yang dibutuhkan resultsRender client → `m` fallback ke 'chime' (salah kartu) & qualified logic mismatch → render fallback tanpa carousel.
+2. Re-render "server-driven" yang saya tambahkan hanya menimpa `cp_server_result` lalu memanggil `resultsRender()` (client) lagi — bukan render dari data server.
+
+### Fix
+- **resultsRenderServerVar()** baru di SUB2: render penuh server-driven dari `/api/validate?lid=` (match, odds, fit, top3 [{k,o}]) — carousel slide-nav (slide = pindah page, bawa lid+g), CTA Continue per kartu (jumpParams slug benar), track results_view/match_slide/jump_click.
+- Blok `!TOK && LIDP && GATE_G` → `return` setelah dispatch (client render hanya fallback bila validate gagal).
+- **Anti-stale**: referensi `app.js?v=432`, `kv.js?v=432`, `style.css?v=432` di results/index — perubahan versi tiap deploy menghindari edge-cache lama.
+
+### Verifikasi (production)
+validate?lid → valid + top3 [{k,o}] ✓ · results.html 200 + app.js?v=432 ✓ · server-carousel code di served ✓ · P1 200 ✓
