@@ -263,3 +263,26 @@ Fix terakhir dalam audit ini:
 4. /api/validate unknown lid/expired → 200 {valid:false} (bersihkan console noise).
 
 **FASE A TUNTAS — flow production end-to-end verified. Fase B menunggu input GAM Shelby.**
+
+---
+
+# ADDENDUM 12 (28 Okt) — Feedback audit Fase A (AUDIT_FASE_A_INDEPENDENT) — FIXED
+
+### T1 — param chain rusak `cq_mathime` — FIXED
+- **Akar (koreksi diagnosis auditor)**: bukan typo builder — ini **key `cq_timing` dengan value kosong** yang ditulis URLSearchParams sebagai `cq_timing` tanpa `=` (slideHref SUB1: `cq_timing:p.get('cq_timing')||''`). Auditor melihatnya sebagai "cq_mathime" (misread base64-ish string). Value kosong berasal dari quiz submit yang tidak membawa cq_timing di URL result (v4.3.1 menghapus t dari URL, dan result page SUB1 tidak lagi menerima cq_timing dari mana pun).
+- **Fix**: helper `cleanQS()` — membuang semua param dengan value kosong/null/undefined dari semua URL builder (FB1 jumpQS, slideHref SUB1 & SUB2). Terverifikasi: slide URL tidak lagi punya key tanpa nilai; landing FB1 tetap bersih.
+- **Impact GAM**: cq_timing tidak lagi pernah lewat sebagai key invalid — kv.js v2 defensive rule tidak lagi pernah dimicukan oleh URL.
+
+### T2 — bot dapat gate (keputusan director: BIARKAN) ✓
+Sesuai keputusan director — bot dapat flow normal, D1 mencatat bot=true + botReason, filter saat analisis. Tidak ada perubahan.
+
+### T3 — double-CTA P1/P2 vs GAM interstitial (Fase B) ✓
+Dicatat — verifikasi saat wrapper dipasang: pastikan interstitial tidak menutup CTA utama (slot config / trigger).
+
+### T4 — unknown/expired lid menampilkan halaman kosong — FIXED
+- **Fix**: `/results?lid=unknown` kini menampilkan **"Session expired" screen** + penjelasan (hasil disimpan 24 jam) + CTA "Retake the quiz →" (merah). Verified: unknown lid → expired screen dengan retake CTA; lid valid → carousel normal.
+
+### Klarifikasi arsitektur (dari auditor) — STATUS
+Setuju dengan catatan dua-salinan. **Pindahkan domain card.* ke worker cardpath-farm saat tenang** (5 menit dashboard): setelah dipindah, worker cardpath /start/* 301 legacy aktif kembali otomatis (kode sudah ada), dan /sub1/* copy menjadi cadangan. Koordinasi dengan agent bila dilakukan.
+
+**Deployed: farm 169a1f8d / worker 18a9abff era. Semua temuan auditor T1-T4 ditangani atau dicatat sesuai keputusan director.**
