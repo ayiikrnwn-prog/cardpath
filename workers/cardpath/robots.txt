@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Google AdSense/Mediapartners crawler (blueprint §9 — jangan blok)
+User-agent: Mediapartners-Google
+Allow: /
+
+User-agent: AdsBot-Google
+Allow: /
+
+Sitemap: https://cardpath.example/sitemap.xml

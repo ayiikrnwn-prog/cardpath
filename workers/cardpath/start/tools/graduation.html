@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Graduation Readiness Checker — CardPath</title>
+<meta name="description" content="How close are you to graduating from a secured card? Check readiness per issuer rules — Capital One auto at 6 months, OpenSky request, and more.">
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="disclosure">Editorial content only. We may earn a commission from partners. Educational content — not financial advice.</div>
+<header class="topbar">
+  <div class="logo">Card<span class="dot">Path</span></div>
+  <nav><a data-fwd href="../../index.html">Home</a><a data-fwd href="../../quiz.html">Quiz</a><a data-fwd href="../../quiz.html" class="nav-cta">Find My Card</a></nav>
+</header>
+
+<main class="wrap">
+  <section class="hero" style="padding-bottom:6px">
+    <div class="eyebrow">Tool</div>
+    <h1 style="font-size:clamp(26px,4vw,36px);font-weight:450">Graduation readiness checker.</h1>
+    <p class="sub">Secured today, unsecured later — and your deposit back. See how close you are, per issuer rules.</p>
+  </section>
+
+  <section>
+    <div class="quiz-shell" style="max-width:720px">
+      <form id="gr-form">
+        <div class="quiz-opts" style="gap:14px">
+          <div><label style="display:block;font-size:13px;color:var(--ink-3);margin-bottom:6px">YOUR ISSUER</label>
+          <select id="gr-issuer" style="width:100%;padding:13px 14px;font-size:16px;border:1.5px solid var(--hairline);border-radius:10px">
+            <option value="capone49">Capital One (auto review, month 6)</option>
+            <option value="quicksilver">Capital One Quicksilver (auto, month 6)</option>
+            <option value="opensky">OpenSky (request, ~month 6)</option>
+            <option value="openskynb">OpenSky no-bank (request, ~month 6)</option>
+          </select></div>
+          <div><label style="display:block;font-size:13px;color:var(--ink-3);margin-bottom:6px">MONTHS SINCE ACCOUNT OPENED: <span id="gr-months-v" class="num">6</span></label>
+          <input id="gr-months" type="range" min="0" max="24" value="6" style="width:100%"></div>
+          <div><label style="display:block;font-size:13px;color:var(--ink-3);margin-bottom:6px">ON-TIME STREAK (MONTHS): <span id="gr-streak-v" class="num">6</span></label>
+          <input id="gr-streak" type="range" min="0" max="24" value="6" style="width:100%"></div>
+          <div><label style="display:block;font-size:13px;color:var(--ink-3);margin-bottom:6px">TYPICAL UTILIZATION: <span id="gr-util-v" class="num">20</span>%</label>
+          <input id="gr-util" type="range" min="0" max="100" value="20" style="width:100%"></div>
+          <button class="cta full" type="submit">Check My Readiness →</button>
+        </div>
+      </form>
+      <div id="gr-out" style="display:none;margin-top:22px"></div>
+      <p class="disclaimer-sm">Readiness estimates from public issuer policies — not a guarantee. Graduation decisions belong to the issuer.</p>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap"><p class="fine">© 2026 CardPath.</p></div></footer>
+<script src="../../app.js"></script><script src="../../kv.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const prof=JSON.parse(sessionStorage.getItem('cp_profile')||'{}');
+  if(prof.cq_match && ['capone49','quicksilver','opensky','openskynb'].includes(prof.cq_match))
+    document.getElementById('gr-issuer').value=prof.cq_match;
+  ['gr-months','gr-streak','gr-util'].forEach(id=>{
+    document.getElementById(id).addEventListener('input',e=>{
+      document.getElementById(id+'-v').textContent=e.target.value;
+    });
+  });
+  document.getElementById('gr-form').addEventListener('submit',e=>{
+    e.preventDefault();
+    const issuer=document.getElementById('gr-issuer').value;
+    const months=+document.getElementById('gr-months').value;
+    const streak=+document.getElementById('gr-streak').value;
+    const util=+document.getElementById('gr-util').value;
+    // scoring per issuer rules
+    let pct=0; const actions=[];
+    const needMonths = (issuer==='capone49'||issuer==='quicksilver') ? 6 : 6;
+    const mode = (issuer==='opensky'||issuer==='openskynb') ? 'request' : 'auto';
+    pct += Math.min(40, Math.round(months/needMonths*40));
+    pct += Math.min(35, Math.round(streak/6*35));
+    pct += util<=10 ? 25 : util<=30 ? 15 : 0;
+    if (util>30) actions.push('Pay the balance before the statement date — reported utilization over 30% is your biggest drag right now.');
+    if (streak<6) actions.push('Protect the streak: autopay the minimum at least, so nothing slips.');
+    if (months>=needMonths && mode==='request') actions.push('You are eligible to <strong>request the upgrade</strong> — call or use the issuer app.');
+    if (months>=needMonths && mode==='auto') actions.push('The issuer reviews automatically — make sure your contact info is current so you do not miss it.');
+    if (util<=10 && streak>=6) actions.push('You are in the optimal zone — stay the course.');
+    const band = pct>=85?['Ready to graduate','odds-high']:pct>=60?['Close — a few months away','odds-med']:['Building — keep the streak','odds-low'];
+    document.getElementById('gr-out').innerHTML=
+      '<div class="verdict"><div class="match">Readiness</div>' +
+      '<div class="cardname num">'+pct+'%</div>' +
+      '<span class="odds-band '+band[1]+'">'+band[0]+'</span>' +
+      '<p class="why">'+(mode==='auto'?'This issuer reviews automatically around month '+needMonths+' — no request needed.':'This issuer expects an upgrade request from you around month '+needMonths+' — do not wait for them to offer.')+'</p>' +
+      (actions.length?'<div class="alts" style="text-align:left">'+actions.map(a=>'<div class="alt"><span>'+a+'</span></div>').join('')+'</div>':'') +
+      '<a class="cta" href="#" id="gr-email" style="margin-top:14px">Email me the graduation checklist →</a></div>';
+    document.getElementById('gr-out').style.display='block';
+    document.getElementById('gr-email').addEventListener('click',ev=>{
+      ev.preventDefault();
+      track('email_optin',{source:'graduation_checker'});
+      try{fetch('/api/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lid:getLid(),tool:'graduation',pct})}).catch(()=>{});}catch(err){}
+      ev.target.textContent='Check your inbox →'; ev.target.style.pointerEvents='none';
+    });
+    track('calculator_use',{calc:'graduation_checker',issuer,pct});
+  });
+});
+</script>
+</body></html>

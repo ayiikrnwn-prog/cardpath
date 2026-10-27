@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card Eligibility Quiz — CardPath</title>
+<meta name="description" content="Answer 6 questions and get your top credit-builder card match with estimated approval odds. Free, 60 seconds, no credit score impact.">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="disclosure">Editorial content only. We may earn a commission from partners.</div>
+<header class="topbar">
+  <div class="logo">Card<span class="dot">Path</span></div>
+  <nav><a data-fwd href="../index.html">Home</a><a data-fwd href="quiz.html" class="nav-cta">Quiz</a></nav>
+</header>
+
+<main class="wrap">
+  <section class="hero" style="padding-bottom:10px">
+    <div class="eyebrow">Eligibility quiz</div>
+    <h1 style="font-size:clamp(26px,4vw,36px)">Which card matches your situation?</h1>
+    <p class="sub">Six questions. No hard pull.</p>
+    <div class="quiz-progress"><i id="qp-fill" style="width:0%"></i></div>
+    <div class="quiz-progress-label" id="qp-label">Question 1 of 6</div>
+  </section>
+
+  <section>
+    <div class="quiz-shell">
+      <div id="quiz-box"></div>
+      <div class="quiz-nav">
+        <button class="quiz-back" id="quiz-back">← Back</button>
+        <span class="micro" id="quiz-tip"></span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap"><p class="fine">CardPath is an independent educational resource, not a lender or issuer. Quiz results are estimates based on publicly available approval criteria — not a guarantee, pre-approval, or financial advice. © 2026 CardPath.</p></div></footer>
+<script>window.CP_SUB="sub1";</script>
+<script src="../app.js"></script>
+<script>
+document.getElementById('quiz-back').addEventListener('click', () => {
+  if (qi > 0) { qi--; answers[qi] = undefined; backCount++; quizRender(); }
+});
+track('quiz_start', {});
+// R3: silent cooldown — quiz tetap jalan; hasil quiz masuk jalur sekunder otomatis
+// R3: cooldown flag dibaca di app.js quizShowResult (bot=1 → jalur sekunder silent)
+
+// A-3/R3: IP watchlist → SILENT COOLDOWN (bukan blokir); submit otomatis jalur sekunder, tanpa pesan menghukum
+window.__cpWatchlisted=false;
+fetch('/api/ipstatus').then(r=>r.json()).then(st=>{ if(st.watchlisted) window.__cpWatchlisted=true; }).catch(()=>{});
+// demo sessionStorage guard tetap sebagai fallback
+(function(){
+  const now=Date.now(); const arr=JSON.parse(sessionStorage.getItem('cp_submits')||'[]');
+  const recent=arr.filter(t=>now-t<3600000);
+  if(recent.length>=3){ window.__cpWatchlisted=true; }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+name = "cardpath-farm"
+main = "src/worker.js"
+compatibility_date = "2026-10-01"
+account_id = "0e8dd4314eb940218cacebd49988f61b"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "cardpath-db"
+database_id = "da3ce6ac-2216-413d-a174-6fd64a69392c"
+
+[vars]
+CP_ENV = "production"
+SUB = "sub1"

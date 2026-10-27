@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card Eligibility Quiz — CardPath</title>
+<meta name="description" content="Answer 6 questions and get your top credit-builder card match with estimated approval odds. Free, 60 seconds, no credit score impact.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="disclosure">Editorial content only. We may earn a commission from partners. Rates &amp; fees may change.</div>
+<header class="topbar">
+  <div class="logo">Card<span class="dot">Path</span></div>
+  <nav>
+    <a data-fwd href="index.html">Home</a><a data-fwd href="index.html#guides">Guides</a>
+    <a data-fwd href="calculator-approval-odds.html">Calculator</a>
+    <a data-fwd href="quiz.html" class="nav-cta">Quiz</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <section class="hero" style="padding-bottom:10px">
+    <div class="eyebrow">Eligibility quiz</div>
+    <h1 style="font-size:clamp(26px,4vw,36px)">Which card matches your situation?</h1>
+    <p class="sub">Six questions. No hard pull. Your answers stay on your device in this demo.</p>
+    <!-- goal-gradient: progress bar fixed feel -->
+    <div class="quiz-progress"><i id="qp-fill" style="width:0%"></i></div>
+    <div class="quiz-progress-label" id="qp-label">Question 1 of 7</div>
+  </section>
+
+  <section>
+    <div class="quiz-shell">
+      <div id="quiz-box"></div>
+      <div class="quiz-nav">
+        <button class="quiz-back" id="quiz-back">← Back</button>
+        <span class="micro">Estimated approval odds — not a guarantee or pre-approval.</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="fine">CardPath is an independent educational resource, not a lender or issuer. Quiz results are estimates based on publicly available approval criteria — not a guarantee, pre-approval, or financial advice. © 2026 CardPath.</p>
+  </div>
+</footer>
+<script src="app.js"></script>
+<script src="kv.js"></script>
+<script>
+document.getElementById('quiz-back').addEventListener('click', () => {
+  if (qi > 0) { qi--; answers[qi] = undefined; quizRender(); }
+});
+track('quiz_start', {});
+</script>
+</body>
+</html>

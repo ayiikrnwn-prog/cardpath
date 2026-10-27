@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to Get Started with BoomPay Rent Reporting | CardPath</title>
+<meta name="robots" content="noindex"><link rel="stylesheet" href="style.css"></head>
+<body>
+<div class="disclosure">Editorial content only. We may earn a commission from partners. Rates &amp; fees may change — see full <a href="affiliate-disclosure.html">affiliate disclosure</a>.</div>
+<header class="topbar"><div class="logo">Card<span class="dot">Path</span></div><nav><a data-fwd href="index.html">Home</a><a data-fwd href="index.html#guides">Guides</a><a data-fwd href="https://card.seputar-ntt.com/start/quiz.html">Quiz</a><a data-fwd href="https://card.seputar-ntt.com/start/quiz.html" class="nav-cta">Find My Card</a></nav></header>
+<main class="wrap">
+  <section class="hero" style="padding-bottom:6px">
+    <div class="eyebrow">Apply guide</div>
+    <h1 style="font-size:clamp(26px,4vw,38px);font-weight:450">Getting started with BoomPay Rent Reporting</h1>
+    <div id="quiz-personal" style="display:none;margin-top:12px"><span class="odds-band odds-high" id="personal-badge"></span></div>
+  </section>
+  <section style="padding-top:4px">
+    <div class="quiz-shell" style="max-width:680px">
+      <ul style="margin:0 0 22px 20px;color:var(--ink-2)">
+        <li style="margin-bottom:8px"><strong>Fee: $2/mo</strong></li>
+        <li style="margin-bottom:8px"><strong>No deposit</strong></li>
+        <li><strong>Reports to all 3 bureaus</strong></li>
+      </ul>
+      <a class="cta cta-red full" data-out href="/go/boompay" id="outbound">Get Started on the Official Site →</a>
+      <p class="micro" style="text-align:center;margin-top:8px">You will be redirected to another website.</p>
+      <h2 style="font-size:20px;font-weight:500;margin:34px 0 12px">The 4 steps</h2>
+      <div class="alts">
+        <div class="alt"><span><strong>1.</strong> Check eligibility (soft/none — no score impact)</span><span class="num">~2 min</span></div>
+        <div class="alt"><span><strong>2.</strong> Complete setup</span><span class="num">~5 min</span></div>
+        <div class="alt"><span><strong>3.</strong> Get your decision</span><span class="num">often instant</span></div>
+        <div class="alt"><span><strong>4.</strong> Turn on autopay; keep utilization low</span><span class="num">ongoing</span></div>
+      </div><br>
+      <a class="cta-secondary" data-fwd href="https://card.seputar-ntt.com/start/quiz.html">Not sure yet? Take the 60-second quiz →</a>
+      <h2 style="font-size:20px;font-weight:500;margin:34px 0 6px">Before you go</h2>
+      <details open><summary>Does this hurt my credit score?</summary><div class="a">No — adding rent history is positive reporting.</div></details>
+<details><summary>What credit score do I need?</summary><div class="a">None.</div></details>
+<details><summary>How long does it take to build credit with this?</summary><div class="a">Back-reported history counts immediately; ongoing reporting builds monthly.</div></details>
+    </div>
+  </section>
+</main>
+<footer>
+  <div class="wrap">
+    <div class="cols">
+      <div><a href="about.html">About</a><a href="editorial-policy.html">Editorial Policy</a><a href="contact.html">Contact</a></div>
+      <div><a href="privacy.html">Privacy (CCPA)</a><a href="terms.html">Terms</a><a href="affiliate-disclosure.html">Affiliate Disclosure</a></div>
+      <div><a href="how-credit-scores-work.html">How Scores Work</a><a href="how-long-to-build-credit.html">Build Timeline</a><a href="issuer-policy-tracker.html">Policy Tracker</a><a href="new-to-us-build-credit.html">New to the US</a></div>
+      <div><a href="graduation-data-per-issuer.html">Graduation Data</a><a href="denied-a-credit-card-next-steps.html">After a Denial</a><a href="credit-utilization-explained.html">Utilization</a><a href="build-credit-without-a-card.html">Without a Card</a></div>
+    </div>
+    <p class="fine">CardPath is an independent educational resource. Educational content only — not financial advice. © 2026 CardPath.</p>
+  </div>
+</footer>
+<script src="app.js"></script><script src="kv.js"></script>
+<script>
+(function(){
+  const p=new URLSearchParams(location.search);
+  const m=p.get('cq_match')||p.get('m'), o=p.get('o');
+  if(m&&o){
+    sessionStorage.setItem('cp_match',m);
+    sessionStorage.setItem('cp_profile',JSON.stringify({
+      cq_match:m,o:o,lid:p.get('lid')||'',fit:p.get('cp')||'',intent:p.get('i')||'',
+      cq_pos:p.get('cq_pos')||'',cq_id:p.get('cq_id')||'',cq_goal:p.get('cq_goal')||'',
+      cq_dep:p.get('cq_dep')||'',cq_timing:p.get('cq_timing')||'',cq_regen:p.get('cq_regen')||''
+    }));
+    document.getElementById('quiz-personal').style.display='block';
+    const lbl={high:'Very likely',medium:'Likely',low:'Possible'}[o]||o;
+    const cls={high:'odds-high',medium:'odds-med',low:'odds-low'}[o]||'odds-med';
+    document.getElementById('personal-badge').className='odds-band '+cls;
+    document.getElementById('personal-badge').textContent='Based on your quiz result · Approval odds: '+lbl;
+    track('p2_view',{match:m,odds:o});
+    track('sub2_landing',{lid:p.get('lid')||'',cp:p.get('cp')||'',cq_match:m});
+  }
+  document.getElementById('outbound').addEventListener('click',function(e){
+    e.preventDefault();
+    location.href='/go/boompay?'+location.search.slice(1);
+  });
+})();
+</script>
+</body></html>

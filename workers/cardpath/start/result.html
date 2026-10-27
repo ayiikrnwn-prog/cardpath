@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Match — CardPath</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="disclosure">Editorial content only. We may earn a commission from partners.</div>
+<header class="topbar">
+  <div class="logo">Card<span class="dot">Path</span></div>
+  <nav><a data-fwd href="../index.html">Home</a><a data-fwd href="quiz.html" class="nav-cta">Retake Quiz</a></nav>
+</header>
+
+<main class="wrap">
+  <section class="hero" style="padding-bottom:6px">
+    <div class="eyebrow">Your result</div>
+    <h1 style="font-size:clamp(26px,4vw,36px)">Here's your top match.</h1>
+  </section>
+  <!-- SUB1: satu-satunya slot iklan di seluruh /start/* (brief B0: max 1, hanya di result) -->
+
+  <section style="padding-top:10px">
+    <div class="quiz-shell" id="results-box"></div>
+  </section>
+
+  <!-- B4: jalur sekunder (untuk <60, dirender via JS) -->
+  <section class="soft" id="secondary-zone" style="display:none">
+    <div class="quiz-shell" style="max-width:720px">
+      <div class="kicker">Keep going — free</div>
+      <h2 class="sec">Build your knowledge while you decide.</h2>
+      <br>
+      <div class="alts" id="secondary-content"></div>
+      <br>
+      <div style="text-align:center">
+        <h3 style="font-size:18px;font-weight:500;margin-bottom:10px">Free 7-day email course: Build credit from zero</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+          <input id="sec-email" type="email" placeholder="you@email.com" style="flex:1;min-width:200px;max-width:280px;padding:13px 14px;font-size:16px;border:1.5px solid var(--hairline);border-radius:10px">
+          <button class="cta" id="sec-optin">Start the Course →</button>
+        </div>
+        <p class="micro">Double opt-in · Unsubscribe anytime · <a href="../privacy.html">Privacy</a></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap"><p class="fine">CardPath is an independent educational resource, not a lender or issuer. Results are estimates based on publicly available approval criteria — not a guarantee, pre-approval, or financial advice. © 2026 CardPath.</p></div></footer>
+<script src="../app.js"></script>
+<script>
+// B4: jalur sekunder utk score<60 — konten sesuai profil
+(function(){
+  const p=new URLSearchParams(location.search);
+  const s=parseInt(p.get('s')||'0',10);
+  const pos=p.get('cq_pos')||'unknown';
+  if(s<60){
+    document.getElementById('secondary-zone').style.display='block';
+    const rec={
+      unknown:'how-credit-scores-work.html',
+      none:'how-credit-scores-work.html',
+      bad:'secured-cards-under-100-deposit.html',
+      fair:'best-zero-fee-secured-cards.html',
+      good:'fast-credit-limit-increase.html'
+    };
+    const arts=[
+      ['How credit scores work', rec[pos]||'how-credit-scores-work.html'],
+      ['Secured cards under $100 deposit', 'secured-cards-under-100-deposit.html'],
+      ['The $0-fee secured cards, ranked', 'best-zero-fee-secured-cards.html'],
+      ['Denied a card? Next steps', 'denied-a-credit-card-next-steps.html'],
+      ['Rebuilding after bankruptcy', 'rebuilding-after-bankruptcy-guide.html']
+    ];
+    const tools=[
+      ['Month-by-Month Plan Generator','tools/plan.html'],
+      ['Graduation Readiness Checker','tools/graduation.html'],
+      ['Score Factor Explorer','tools/score-factors.html'],
+    ];
+    document.getElementById('secondary-content').innerHTML =
+      arts.map(a=>'<a class="alt" data-fwd href="../'+a[1]+'"><span><strong>'+a[0]+'</strong></span><span>→</span></a>').join('') +
+      tools.map(t=>'<a class="alt" data-fwd href="'+t[1]+'"><span><strong>🛠 '+t[0]+'</strong> — tool</span><span>→</span></a>').join('');
+    document.getElementById('sec-optin').addEventListener('click',()=>{
+      const em=document.getElementById('sec-email').value.trim();
+      if(/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){
+        track('email_optin',{source:'secondary_course',email_domain:em.split('@')[1]});
+        fetch('/api/email',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({lid:(JSON.parse(sessionStorage.getItem('cp_profile')||'{}').lid)||'',email:em})}).catch(()=>{});
+        document.getElementById('sec-optin').textContent='Check your inbox →';
+        document.getElementById('sec-optin').style.pointerEvents='none';
+      }
+    });
+  }
+})();
+track('secondary_view',{}); // B6 event
+</script>
+</body>
+</html>
