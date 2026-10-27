@@ -58,3 +58,45 @@ node qa/spread_test.js   # QA harness (wajib PASS sebelum ubah CARDS/goalFit)
 ## Deploy checklist
 
 Lihat `docs/DEPLOY_CHECKLIST.md` — PROD_HOSTS, sitemap domain, Worker `/go/{key}` route, GAM setup, ads.txt, affiliate apps, traffic test, Fase C kalibrasi.
+
+
+---
+
+## API CONTRACT — `POST /api/track`
+
+Batch-first-party tracking. `Content-Type: application/json`.
+
+### Payload
+```json
+{
+  "batch": [
+    {
+      "lid": "cp_xxxxx",              // WAJIB, string non-empty — tanpa ini event DITOLAK
+      "event": "quiz_complete",       // WAJIB, salah satu dari VALID_EVENTS
+      "sub": "sub1",                  // sub1 | sub2
+      "page": "/start/quiz.html",
+      "session_id": "uuid",           // opsional — jika ada, session_summary ikut di-update
+      "utm": { "utm_source": "gcl1", "utm_campaign": "...", "utm_content": "...", "utm_term": "..." },
+      "device": "mobile",             // desktop | mobile | tablet
+      "country": "US",
+      "depth": 75,                    // scroll_depth: 25|50|75|100
+      "engaged_sec": 10,              // heartbeat delta
+      "data": { }                     // meta bebas (JSON-serialized)
+    }
+  ]
+}
+```
+
+### VALID_EVENTS
+`session_start · page_view · scroll_depth · heartbeat · session_end ·
+quiz_start · quiz_complete · gate_completed · jump_click · sub2_landing ·
+p1_view · p2_view · outbound_click · match_slide · click · view`
+
+### Response
+```json
+{ "ok": true, "saved": 3, "rejected": 1 }
+```
+- `saved` = event benar-benar masuk D1; `rejected` = ditolak (lid kosong /
+  event tidak dikenal / format salah). **Event tidak valid TIDAK pernah masuk D1.**
+- Single-event (tanpa `batch`) juga diterima: body = 1 event langsung.
+- Client library: `/track.js` (batch 5s, sendBeacon pada pagehide).

@@ -277,23 +277,46 @@ async function handleValidate(request, env) {
   return json({valid:true, ...data, top3});
 }
 
+const VALID_EVENTS = new Set(['session_start','page_view','scroll_depth','heartbeat','session_end','quiz_start','quiz_complete','gate_completed','jump_click','sub2_landing','p1_view','p2_view','outbound_click','match_slide','click','view']);
+async function trackSessionP(env, ev){
+  const sid=ev.session_id; if(!sid) return;
+  const utm=ev.utm||{};
+  if(ev.event==='session_start'){
+    await env.DB.prepare('INSERT INTO session_summary (session_id, lid, utm_source, utm_campaign, utm_content, device, country, started_ts, last_ts, pageviews) VALUES (?,?,?,?,?,?,?,?,?,1) ON CONFLICT(session_id) DO NOTHING')
+      .bind(sid, ev.lid||null, utm.utm_source||null, utm.utm_campaign||null, utm.utm_content||null, ev.device||null, ev.country||null, Date.now(), Date.now()).run();
+  } else {
+    const sets=['last_ts=?']; const vals=[Date.now()];
+    if(ev.event==='page_view'){ sets.push('pageviews=pageviews+1'); }
+    if(ev.depth){ sets.push('max_scroll_pct=MAX(max_scroll_pct,?)'); vals.push(ev.depth); }
+    if(ev.engaged_sec){ sets.push('engaged_sec=engaged_sec+?'); vals.push(ev.engaged_sec); }
+    if(ev.event==='quiz_complete'){ sets.push('quiz_completed=1'); }
+    if(ev.event==='gate_completed'){ sets.push('gate_completed=1'); }
+    if(ev.event==='jump_click'){ sets.push('jumped=1'); }
+    if(ev.event==='outbound_click'){ sets.push('outbound=1'); }
+    vals.push(sid);
+    await env.DB.prepare('UPDATE session_summary SET '+sets.join(', ')+' WHERE session_id=?').bind(...vals).run();
+  }
+}
+async function insertFunnelP(env, ev){
+  if (!ev || !ev.lid || typeof ev.lid!=='string' || !VALID_EVENTS.has(ev.event)) return false;
+  await env.DB.prepare('INSERT INTO funnel_events (ts, lid, event, sub, page, utm_source, utm_campaign, utm_content, utm_term, session_id, device, country, meta_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
+    .bind(Date.now(), ev.lid, ev.event, ev.sub||null, ev.page||null,
+      (ev.utm&&ev.utm.utm_source)||null, (ev.utm&&ev.utm.utm_campaign)||null,
+      (ev.utm&&ev.utm.utm_content)||null, (ev.utm&&ev.utm.utm_term)||null,
+      ev.session_id||null, ev.device||null, ev.country||null, JSON.stringify(ev.data||{})).run();
+  return true;
+}
 async function handleTrack(request, env) {
   let body; try { body = await request.json(); } catch(e) { return json({ok:false}, 400); }
-  // v2: batch support (track.js mengirim {batch:[...]})
-  if (body.batch && Array.isArray(body.batch)) {
-    for (const ev of body.batch) {
-      try { if (ev.session_id) await trackSession(env, ev); } catch(e){}
-      try { await insertFunnel(env, ev); } catch(e){}
-    }
-    return json({ok:true, count:body.batch.length});
+  const events = (body.batch && Array.isArray(body.batch)) ? body.batch : [body];
+  let saved=0, rejected=0;
+  for (const ev of events) {
+    let okF=false;
+    try { okF = await insertFunnelP(env, ev); } catch(e){ console.log('if err', String(e).slice(0,120)); }
+    try { if (okF && ev.session_id) await trackSessionP(env, ev); } catch(e){ console.log('ts err', String(e).slice(0,120)); }
+    if (okF) saved++; else rejected++;
   }
-  try {
-    await env.DB.prepare(
-      'INSERT INTO funnel_events (ts, lid, event, sub, page, utm_source, meta_json) VALUES (?,?,?,?,?,?,?)'
-    ).bind(Date.now(), body.lid || null, body.event || 'unknown', body.sub || null,
-      body.page || null, (body.utm && body.utm.utm_source) || null, JSON.stringify(body.data || {})).run();
-  } catch(e) { /* silent */ }
-  return json({ok:true});
+  return json({ok:true, saved, rejected});
 }
 
 async function handleEmail(request, env) {

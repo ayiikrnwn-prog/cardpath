@@ -75,7 +75,7 @@ export default {
     // ---------- STATIC ASSETS (dari Assets binding) + inject track.js ----------
     const assetResp = await env.ASSETS.fetch(request);
     const __ct = assetResp.headers.get('Content-Type')||'';
-    if (__ct.includes('text/html') && request.method === 'GET' && !path.startsWith('/sub1/')) {
+    if (__ct.includes('text/html') && request.method === 'GET') {
       let __html = await assetResp.text();
       if (!__html.includes('track.js')) __html = __html.replace('</head>', '<script src="/track.js" defer></script></head>');
       const __r2 = new Response(__html, assetResp);
@@ -368,21 +368,27 @@ async function trackSessionP(env, ev){
     await env.DB.prepare('UPDATE session_summary SET '+sets.join(', ')+' WHERE session_id=?').bind(...vals).run();
   }
 }
+const VALID_EVENTS = new Set(['session_start','page_view','scroll_depth','heartbeat','session_end','quiz_start','quiz_complete','gate_completed','jump_click','sub2_landing','p1_view','p2_view','outbound_click','match_slide','click','view']);
 async function insertFunnelP(env, ev){
+  if (!ev || !ev.lid || typeof ev.lid!=='string' || !VALID_EVENTS.has(ev.event)) return false; // reject sampah
   await env.DB.prepare('INSERT INTO funnel_events (ts, lid, event, sub, page, utm_source, utm_campaign, utm_content, utm_term, session_id, device, country, meta_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
     .bind(Date.now(), ev.lid||null, ev.event||'unknown', ev.sub||null, ev.page||null,
       (ev.utm&&ev.utm.utm_source)||null, (ev.utm&&ev.utm.utm_campaign)||null,
       (ev.utm&&ev.utm.utm_content)||null, (ev.utm&&ev.utm.utm_term)||null,
       ev.session_id||null, ev.device||null, ev.country||null, JSON.stringify(ev.data||{})).run();
+  return true;
 }
 async function handleTrack(request, env) {
   let body; try { body = await request.json(); } catch(e) { return json({ok:false}, 400); }
   const events = (body.batch && Array.isArray(body.batch)) ? body.batch : [body];
+  let saved=0, rejected=0;
   for (const ev of events) {
-    try { if (ev.session_id) await trackSessionP(env, ev); } catch(e){ console.log('ts err', String(e).slice(0,120)); }
-    try { await insertFunnelP(env, ev); } catch(e){ console.log('if err', String(e).slice(0,120)); }
+    let okF=false;
+    try { okF = await insertFunnelP(env, ev) !== false; } catch(e){ console.log('if err', String(e).slice(0,120)); }
+    try { if (ev.session_id && okF) await trackSessionP(env, ev); } catch(e){ console.log('ts err', String(e).slice(0,120)); }
+    if (okF) saved++; else rejected++;
   }
-  return json({ok:true, count:events.length});
+  return json({ok:true, saved, rejected});
 }
 
 async function handleEmail(request, env) {
