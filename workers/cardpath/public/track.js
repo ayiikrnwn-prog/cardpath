@@ -9,6 +9,10 @@
   var UTM = {};
   try { var p = new URLSearchParams(location.search);
     ['utm_source','utm_campaign','utm_content','utm_term','utm_medium'].forEach(function(k){ var v=p.get(k); if(v) UTM[k]=v; });
+    // gclid capture: URL → sessionStorage (persist lintas page funnel)
+    var gclid = p.get('gclid');
+    if (gclid) { sessionStorage.setItem('cp_gclid', gclid); UTM.gclid = gclid; }
+    else { gclid = sessionStorage.getItem('cp_gclid'); if (gclid) UTM.gclid = gclid; }
   } catch(e){}
   var started = Date.now();
   var maxScroll = 0; var heartbeats = 0; var pageviews = 0;

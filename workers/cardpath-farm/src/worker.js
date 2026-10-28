@@ -282,8 +282,8 @@ async function trackSessionP(env, ev){
   const sid=ev.session_id; if(!sid) return;
   const utm=ev.utm||{};
   if(ev.event==='session_start'){
-    await env.DB.prepare('INSERT INTO session_summary (session_id, lid, utm_source, utm_campaign, utm_content, device, country, started_ts, last_ts, pageviews) VALUES (?,?,?,?,?,?,?,?,?,1) ON CONFLICT(session_id) DO NOTHING')
-      .bind(sid, ev.lid||null, utm.utm_source||null, utm.utm_campaign||null, utm.utm_content||null, ev.device||null, ev.country||null, Date.now(), Date.now()).run();
+    await env.DB.prepare('INSERT INTO session_summary (session_id, lid, utm_source, utm_campaign, utm_content, device, country, gclid, started_ts, last_ts, pageviews) VALUES (?,?,?,?,?,?,?,?,?,?,1) ON CONFLICT(session_id) DO NOTHING')
+      .bind(sid, ev.lid||null, utm.utm_source||null, utm.utm_campaign||null, utm.utm_content||null, ev.device||null, ev.country||null, utm.gclid||null, Date.now(), Date.now()).run();
   } else {
     const sets=['last_ts=?']; const vals=[Date.now()];
     if(ev.event==='page_view'){ sets.push('pageviews=pageviews+1'); }
@@ -299,11 +299,11 @@ async function trackSessionP(env, ev){
 }
 async function insertFunnelP(env, ev){
   if (!ev || !ev.lid || typeof ev.lid!=='string' || !VALID_EVENTS.has(ev.event)) return false;
-  await env.DB.prepare('INSERT INTO funnel_events (ts, lid, event, sub, page, utm_source, utm_campaign, utm_content, utm_term, session_id, device, country, meta_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
+  await env.DB.prepare('INSERT INTO funnel_events (ts, lid, event, sub, page, utm_source, utm_campaign, utm_content, utm_term, session_id, device, country, gclid, meta_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
     .bind(Date.now(), ev.lid, ev.event, ev.sub||null, ev.page||null,
       (ev.utm&&ev.utm.utm_source)||null, (ev.utm&&ev.utm.utm_campaign)||null,
       (ev.utm&&ev.utm.utm_content)||null, (ev.utm&&ev.utm.utm_term)||null,
-      ev.session_id||null, ev.device||null, ev.country||null, JSON.stringify(ev.data||{})).run();
+      ev.session_id||null, ev.device||null, ev.country||null, (ev.utm&&ev.utm.gclid)||null, JSON.stringify(ev.data||{})).run();
   return true;
 }
 async function handleTrack(request, env) {

@@ -27,7 +27,7 @@ const CARDS = {
     id_req:['ssn','itin'], dep_min:150, fee_monthly:0, fee_annual:35, credit_check:'none',
     graduation:{month:6, mode:'request'}, grad_path:'upgrade request ~6 months', angle:'bankruptcy-friendly',
     why:'No credit check, no bank account required, bankruptcy-friendly — $150 minimum deposit (OpenSky Launch), $35/yr.', network:'VISA' },
-  openskynb: { name:'OpenSky® Secured Visa® (No Bank Account)', slug:'opensky-no-bank-account', type:'card',
+  openskynb: { name:'OpenSky® Secured Visa®', slug:'opensky-no-bank-account', type:'card',
     id_req:['ssn','itin'], dep_min:150, fee_monthly:0, fee_annual:35, credit_check:'none',
     graduation:{month:6, mode:'request'}, grad_path:'upgrade request ~6 months', angle:'no-bank-account',
     why:'No bank account needed — fund your refundable deposit by money order or debit card. No credit check.', network:'VISA' },
@@ -408,6 +408,7 @@ function quizSubmitServer(hasEmail){
     email_at_submit: !!hasEmail
   };
   track('quiz_complete',{server:1});
+  try { if (typeof gtag==='function') gtag('event','generate_lead'); } catch(e){}
   fetch('/api/quiz',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
     .then(r=>r.json())
     .then(res=>{
