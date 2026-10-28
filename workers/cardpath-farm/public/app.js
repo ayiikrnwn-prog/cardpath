@@ -407,7 +407,7 @@ function quizSubmitServer(hasEmail){
     repeat: localStorage.getItem('cp_repeat')==='1',
     email_at_submit: !!hasEmail
   };
-  track('quiz_complete',{server:1});
+  track('quiz_funnel_client',{server:1}); // B1: funnel quiz_complete single-source dari server /api/quiz
   try { if (typeof gtag==='function') gtag('event','generate_lead'); } catch(e){}
   fetch('/api/quiz',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
     .then(r=>r.json())

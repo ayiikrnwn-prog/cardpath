@@ -289,7 +289,7 @@ async function trackSessionP(env, ev){
     if(ev.event==='page_view'){ sets.push('pageviews=pageviews+1'); }
     if(ev.depth){ sets.push('max_scroll_pct=MAX(max_scroll_pct,?)'); vals.push(ev.depth); }
     if(ev.engaged_sec){ sets.push('engaged_sec=engaged_sec+?'); vals.push(ev.engaged_sec); }
-    if(ev.event==='quiz_complete'){ sets.push('quiz_completed=1'); }
+    if(ev.event==='quiz_complete' || ev.event==='quiz_funnel_client'){ sets.push('quiz_completed=1'); }
     if(ev.event==='gate_completed'){ sets.push('gate_completed=1'); }
     if(ev.event==='jump_click'){ sets.push('jumped=1'); }
     if(ev.event==='outbound_click'){ sets.push('outbound=1'); }
@@ -299,6 +299,7 @@ async function trackSessionP(env, ev){
 }
 async function insertFunnelP(env, ev){
   if (!ev || !ev.lid || typeof ev.lid!=='string' || !VALID_EVENTS.has(ev.event)) return false;
+  if (ev.page) ev.page = ev.page.replace(/^\/sub1/, '') || '/'; // B2: normalisasi path internal → canonical
   await env.DB.prepare('INSERT INTO funnel_events (ts, lid, event, sub, page, utm_source, utm_campaign, utm_content, utm_term, session_id, device, country, gclid, meta_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
     .bind(Date.now(), ev.lid, ev.event, ev.sub||null, ev.page||null,
       (ev.utm&&ev.utm.utm_source)||null, (ev.utm&&ev.utm.utm_campaign)||null,
@@ -313,7 +314,7 @@ async function handleTrack(request, env) {
   for (const ev of events) {
     let okF=false;
     try { okF = await insertFunnelP(env, ev); } catch(e){ console.log('if err', String(e).slice(0,120)); }
-    try { if (okF && ev.session_id) await trackSessionP(env, ev); } catch(e){ console.log('ts err', String(e).slice(0,120)); }
+    try { if (ev.session_id && (okF || ev.event==='quiz_funnel_client')) await trackSessionP(env, ev); } catch(e){ console.log('ts err', String(e).slice(0,120)); }
     if (okF) saved++; else rejected++;
   }
   return json({ok:true, saved, rejected});

@@ -17,6 +17,8 @@
   var started = Date.now();
   var maxScroll = 0; var heartbeats = 0; var pageviews = 0;
   var buf = [];
+  var COUNTRY = null;
+  try { COUNTRY = sessionStorage.getItem('cp_country'); if(!COUNTRY){ COUNTRY = (Intl.DateTimeFormat().resolvedOptions().timeZone||'').split('/').pop()||null; if(COUNTRY) sessionStorage.setItem('cp_country', COUNTRY); } } catch(e){}
   function deviceFromUA(){
     var ua = navigator.userAgent;
     if (/Mobile|Android|iPhone/.test(ua)) return 'mobile';
@@ -25,7 +27,7 @@
   }
   function push(ev, extra){
     buf.push(Object.assign({ event:ev, session_id:SID, lid:LID, ts:Date.now(), page:location.pathname,
-      sub: window.CP_SUB || (location.hostname.startsWith('card.')?'sub1':'sub2'),
+      sub: window.CP_SUB || (location.hostname.startsWith('card.')?'sub1':'sub2'), country: COUNTRY,
       utm:UTM, device:deviceFromUA() }, extra||{}));
   }
   // session_start (sekali per session — guard flag)
