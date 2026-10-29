@@ -1,3 +1,38 @@
+// Website Studio: injections + menus dari D1 (cache 60s)
+async function siteCfg(env){
+  if (!globalThis.__cpSiteCfg || Date.now()-globalThis.__cpSiteCfg.ts > 60000) {
+    let inj=[], menus=[];
+    try {
+      inj = (await env.DB.prepare('SELECT * FROM site_injections WHERE enabled=1').all()).results||[];
+      menus = (await env.DB.prepare('SELECT * FROM site_menus WHERE enabled=1 ORDER BY menu, sort').all()).results||[];
+    } catch(e){}
+    globalThis.__cpSiteCfg = { ts: Date.now(), inj, menus };
+  }
+  return globalThis.__cpSiteCfg;
+}
+function applyInjections(html, cfg, hostname){
+  const isSub1 = hostname.startsWith('card.');
+  const code = cfg.inj.filter(i => i.scope==='both' || (i.scope==='sub1'&&isSub1) || (i.scope==='sub2'&&!isSub1));
+  let head='', body='';
+  code.forEach(i => { if(i.placement==='head') head += i.code; else body += i.code; });
+  if (head) html = html.replace('</head>', head + '</head>');
+  if (body) html = html.replace('</body>', body + '</body>');
+  if (cfg.menus.length) {
+    const items = m => cfg.menus.filter(x=>x.menu===m).map(x=>'<a data-fwd href="'+x.href+'">'+x.label+'</a>').join('');
+    const hdr = items('header');
+    if (hdr) html = html.replace(/<nav>.*?<\/nav>/s, '<nav>'+hdr+'</nav>');
+    const colsM = html.match(/<footer[\s\S]*?<div class="cols">([\s\S]*?)<p class="fine"/i);
+    if (colsM) {
+      let colArr = colsM[1].match(/<div>.*?<\/div>/g) || [];
+      ['footer_col1','footer_col2','footer_col3','footer_col4'].forEach((m,i)=>{
+        const it = items(m);
+        if (it && colArr[i]!==undefined) colArr[i] = '<div>'+it+'</div>';
+      });
+      html = html.replace(colsM[0], '<footer><div class="wrap"><div class="cols">'+colArr.join('')+'</div><p class="fine"');
+    }
+  }
+  return html;
+}
 // X1: cookie cp_lid lintas-subdomain (fallback navigasi tanpa URL param)
 function applyLidCookie(headers, url) {
   const lid = url.searchParams.get('lid');
@@ -84,6 +119,10 @@ export default {
             const gid = env.CP_GTAG_ID;
             __h = __h.replace('</head>', '<script async src="https://www.googletagmanager.com/gtag/js?id='+gid+'"></scr'+'ipt><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag(\'js\',new Date());gtag(\'config\',\''+gid+'\');</scr'+'ipt></head>');
           }
+          const cfgW = await siteCfg(env);
+          __h = applyInjections(__h, cfgW, url.hostname);
+          const cfgS1 = await siteCfg(env);
+          __h = applyInjections(__h, cfgS1, url.hostname);
           const r2 = new Response(__h, assetResp);
           r2.headers.set('Content-Type','text/html; charset=utf-8');
           r2.headers.delete('Content-Length');
@@ -112,6 +151,58 @@ export default {
     const goMatch = path.match(/^\/go\/([a-z0-9_]+)$/);
     if (goMatch) {
       return handleGo(goMatch[1], url, env);
+    }
+
+    // ---------- Website Studio: artikel server-rendered ----------
+    const artMatch = path.match(/^\/articles\/([a-z0-9-]+)$/) || path.match(/^\/artikel\/([a-z0-9-]+)$/);
+    if (artMatch && request.method === 'GET') {
+      try {
+        const row = await env.DB.prepare('SELECT * FROM articles WHERE slug=? AND published=1').bind(artMatch[1]).first();
+        if (!row) { const nf = await env.ASSETS.fetch(new URL('/index.html', url.origin)); return new Response(nf.body, {status:404, headers:nf.headers}); }
+        const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        let body = row.body_md.replace(/\r/g,'');
+        let html = '';
+        let inList=false;
+        body.split('\n').forEach(line=>{
+          let l=line;
+          if (/^###\s/.test(l)) { if(inList){html+='</ul>';inList=false;} html+='<h3>'+esc(l.replace(/^###\s/,''))+'</h3>'; }
+          else if (/^##\s/.test(l)) { if(inList){html+='</ul>';inList=false;} html+='<h2>'+esc(l.replace(/^##\s/,''))+'</h2>'; }
+          else if (/^#\s/.test(l)) { if(inList){html+='</ul>';inList=false;} html+='<h1>'+esc(l.replace(/^#\s/,''))+'</h1>'; }
+          else if (/^[-*]\s/.test(l)) { if(!inList){html+='<ul>';inList=true;} html+='<li>'+esc(l.replace(/^[-*]\s/,''))+'</li>'; }
+          else if (l.trim()==='') { if(inList){html+='</ul>';inList=false;} }
+          else {
+            if(inList){html+='</ul>';inList=false;}
+            let p=esc(l)
+              .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+              .replace(/\*([^*]+)\*/g,'<em>$1</em>')
+              .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" rel="noopener">$1</a>');
+            html+='<p>'+p+'</p>';
+          }
+        });
+        if(inList) html+='</ul>';
+        let faqHtml='', faqLd='';
+        try{
+          const faq=JSON.parse(row.faq_json||'[]');
+          if(faq.length){
+            faqHtml='<h2>FAQ</h2>'+faq.map(f=>'<details><summary>'+esc(f.q)+'</summary><div class="a">'+esc(f.a)+'</div></details>').join('');
+            faqLd='<script type="application/ld+json">'+JSON.stringify({"@context":"https://schema.org","@type":"FAQPage","mainEntity":faq.map(f=>({"@type":"Question","name":f.q,"acceptedAnswer":{"@type":"Answer","text":f.a}}))})+'</scr'+'ipt>';
+          }
+        }catch(e){}
+        const page = '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+          + '<title>'+row.title+' | CardPath</title><meta name="description" content="'+row.meta_desc+'">'
+          + '<link rel="stylesheet" href="/style.css">'+faqLd+'</head><body>'
+          + '<div class="disclosure">Editorial content only. We may earn a commission from partners.</div>'
+          + '<header class="topbar"><div class="logo">Card<span class="dot">Path</span></div>'
+          + '<nav><a data-fwd href="/">Home</a><a data-fwd href="/#guides">Guides</a><a data-fwd href="https://card.seputar-ntt.com/start/quiz.html">Quiz</a><a data-fwd href="https://card.seputar-ntt.com/start/quiz.html" class="nav-cta">Find My Card</a></nav></header>'
+          + '<main class="wrap article"><article>'+html+faqHtml+'</article>'
+          + '<p style="margin-top:30px"><a class="cta cta-red" href="https://card.seputar-ntt.com/start/quiz">Take the 60-second quiz</a></p></main>'
+          + '<footer><div class="wrap"><p class="fine">CardPath is an independent educational resource. &copy; 2026 CardPath.</p></div></footer>'
+          + '<script src="/app.js?v=452"></scr'+'ipt></body></html>';
+        const cfgW = await siteCfg(env);
+        let out = applyInjections(page, cfgW, url.hostname);
+        const rr = new Response(out, {headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'}});
+        return rr;
+      } catch(e) { return new Response('article error: '+String(e).slice(0,120), {status:500}); }
     }
 
     // ---------- STATIC ASSETS (dari Assets binding) + inject track.js ----------
@@ -147,6 +238,8 @@ export default {
           if (divsBottom || cfgTag) __html = __html.replace('</body>', divsBottom + cfgTag + gamTag + '</body>');
         } catch(e) { console.log('slots err', String(e).slice(0,120)); }
       }
+      const cfgW2 = await siteCfg(env);
+      __html = applyInjections(__html, cfgW2, url.hostname);
       const __r2 = new Response(__html, assetResp);
       __r2.headers.set('Content-Type','text/html; charset=utf-8');
       __r2.headers.delete('Content-Length');
