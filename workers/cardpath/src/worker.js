@@ -18,7 +18,8 @@ function applyInjections(html, cfg, hostname){
   if (head) html = html.replace('</head>', head + '</head>');
   if (body) html = html.replace('</body>', body + '</body>');
   if (cfg.menus.length) {
-    const items = m => cfg.menus.filter(x=>x.menu===m).map(x=>'<a data-fwd href="'+x.href+'">'+x.label+'</a>').join('');
+    const escH = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const items = m => cfg.menus.filter(x=>x.menu===m).map(x=>'<a data-fwd href="'+escH(x.href)+'">'+escH(x.label)+'</a>').join('');
     const hdr = items('header');
     if (hdr) html = html.replace(/<nav>.*?<\/nav>/s, '<nav>'+hdr+'</nav>');
     const colsM = html.match(/<footer[\s\S]*?<div class="cols">([\s\S]*?)<p class="fine"/i);
