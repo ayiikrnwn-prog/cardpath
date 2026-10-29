@@ -1,0 +1,39 @@
+
+AUDIT FUNGSI MENYELURUH — REKAP (30 Okt)
+
+[Website Studio API]
+1. inj_save (head/both) ................ PASS
+2. inj_save (body_end/sub2) ........... PASS
+3. inj list ........................... PASS (2 tercatat)
+4. inj_toggle off/on .................. PASS
+5. inj_del ............................ PASS
+6. inj_save code kosong ............... PASS (tersimpan, tidak crash)
+7. inj_save code 25k char ............. PASS (slice 20k guard)
+8. art_save normal .................... PASS
+9. art_get ............................ PASS
+10. slug normalize "Audit TEST 2!" .... FAIL→FIXED (trailing dash; sekarang 'audit-test-2')
+11. slug kosong → 400 ................. PASS
+12. FAQ invalid JSON save ............. PASS
+13. FAQ invalid render produksi ....... PASS (200, fallback bagus)
+14. body 65k baris save ............... PASS (slice guard)
+15. menu_save items kosong (clear) .... PASS
+16. menu_save 3 items ................. PASS
+17. XSS via menu label ................ FAIL→FIXED (escape; <script> jadi text)
+18. menu 3 items tampil produksi ...... PASS
+
+[Produksi setelah semua fix]
+19. Journey penuh (quiz→gate→jump) .... PASS, 0 JS errors
+20. lid konsisten lintas sub .......... PASS
+21. cq_timing mengalir ................ PASS (cq_timing=now di landing)
+22. /go/chime 302 params utuh ......... PASS
+23. /go/unknowncard → 404 ............. PASS (tidak bocor)
+24. validasi track (saved:1 rejected:2) PASS
+25. Pixel PageView+QuizStart fire ..... PASS (fbq callMethod aktif)
+26. GTag tidak fire utk metaa/direct .. PASS
+27. Dashboard noindex ................. PASS
+
+[Data]
+28. D1 bersih total setelah audit ..... 0 rows semua tabel transaksional
+
+TOTAL: 3 bug ditemukan & diperbaiki saat audit (slug normalize, XSS menu,
+POST route ads) — semuanya sudah deploy & re-verified PASS.
