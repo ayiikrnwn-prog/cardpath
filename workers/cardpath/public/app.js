@@ -117,9 +117,19 @@ function cleanQS(obj) {
   Object.entries(obj).forEach(([k,v]) => { if (v !== '' && v !== null && v !== undefined) qs.set(k, String(v)); });
   return qs.toString();
 }
+function setCookie(k,v){ try{ document.cookie = k+'='+v+'; Domain=.seputar-ntt.com; Max-Age=2592000; Path=/; Secure; SameSite=Lax'; }catch(e){} }
+function getCookie(k){ try{ return document.cookie.split('; ').reduce((r,c)=>{ const [a,b]=c.split('='); return a===k?(decodeURIComponent(b)||r):r; },''); }catch(e){ return ''; } }
 function getLid() {
+  // X1: URL param → cookie (lintas-sub) → localStorage → generate (organik first touch)
+  try {
+    const urlLid = new URLSearchParams(location.search).get('lid');
+    if (urlLid && /^cp_[a-z0-9]+$/.test(urlLid)) { localStorage.setItem('cp_lid', urlLid); setCookie('cp_lid', urlLid); return urlLid; }
+    const ck = getCookie('cp_lid');
+    if (ck && /^cp_[a-z0-9]+$/.test(ck)) { localStorage.setItem('cp_lid', ck); return ck; }
+  } catch(e){}
   let lid = localStorage.getItem('cp_lid');
   if (!lid) { lid = 'cp_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); localStorage.setItem('cp_lid', lid); }
+  setCookie('cp_lid', lid);
   return lid;
 }
 function forwardUtmLinks() {
@@ -492,7 +502,9 @@ function resultsRenderServerVar(box, v, lid) {
   const card = CARDS[cur.k] || {name:cur.k, why:'', slug:cur.k};
   const band = cur.o==='high'?'odds-high':cur.o==='medium'?'odds-med':'odds-low';
   const utm = getUtm();
-  const jumpQS = new URLSearchParams(Object.assign({lid, cp:v.fit, cq_match:cur.k, o:cur.o}, utm)).toString();
+  const curP=new URLSearchParams(location.search);
+  const jumpQS = new URLSearchParams(Object.assign({lid, cp:v.fit, cq_match:cur.k, o:cur.o,
+    cq_timing:curP.get('cq_timing')||'', cq_regen:curP.get('cq_regen')||'', cq_id:curP.get('cq_id')||''}, utm)).toString();
   const jumpHref = 'https://cardpath.seputar-ntt.com/' + (CARDS[cur.k] ? CARDS[cur.k].slug : cur.k) + '.html?' + jumpQS;
   const slideHrefS = (r) => {
     const t3 = top3[r] || {k:m, o:v.o};

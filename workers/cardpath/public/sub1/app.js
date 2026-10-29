@@ -117,9 +117,29 @@ function cleanQS(obj) {
   Object.entries(obj).forEach(([k,v]) => { if (v !== '' && v !== null && v !== undefined) qs.set(k, String(v)); });
   return qs.toString();
 }
+function setCookie(k,v){ try{ document.cookie = k+'='+v+'; Domain=.seputar-ntt.com; Max-Age=2592000; Path=/; Secure; SameSite=Lax'; }catch(e){} }
+function getCookie(k){ try{ return document.cookie.split('; ').reduce((r,c)=>{ const [a,b]=c.split('='); return a===k?(decodeURIComponent(b)||r):r; },''); }catch(e){ return ''; } }
+function profileQs(){ // X2: cq_* dari cookie lintas-sub (set saat quiz) → fallback cp_profile
+  let out={};
+  try{ out = JSON.parse(decodeURIComponent((document.cookie.match(/(?:^|; )cp_cq=([^;]*)/)||[])[1]||'{}')); }catch(e){}
+  try{
+    const pr = JSON.parse(sessionStorage.getItem('cp_profile') || 'null') || {};
+    ['cq_timing','cq_regen','cq_id','cq_goal','cq_dep','cq_match'].forEach(k=>{ if(!out[k] && pr[k]) out[k]=pr[k]; });
+  }catch(e){}
+  return { cq_timing: out.cq_timing||'', cq_regen: out.cq_regen||'', cq_id: out.cq_id||'',
+           cq_goal: out.cq_goal||'', cq_dep: out.cq_dep||'', cq_match: out.cq_match||'' };
+}
 function getLid() {
+  // X1: URL param → cookie (lintas-sub) → localStorage → generate (organik first touch)
+  try {
+    const urlLid = new URLSearchParams(location.search).get('lid');
+    if (urlLid && /^cp_[a-z0-9]+$/.test(urlLid)) { localStorage.setItem('cp_lid', urlLid); setCookie('cp_lid', urlLid); return urlLid; }
+    const ck = getCookie('cp_lid');
+    if (ck && /^cp_[a-z0-9]+$/.test(ck)) { localStorage.setItem('cp_lid', ck); return ck; }
+  } catch(e){}
   let lid = localStorage.getItem('cp_lid');
   if (!lid) { lid = 'cp_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); localStorage.setItem('cp_lid', lid); }
+  setCookie('cp_lid', lid);
   return lid;
 }
 function forwardUtmLinks() {
@@ -396,6 +416,7 @@ function botFilter() {
 
 // ---------- quizShowResult: profile + redirect ----------
 // ---------- SUB1 server-first submit (A3): scoring via /api/quiz — HMAC token ----------
+function cqV(idx){ const x=answers[idx]; if(x==null) return ''; return (typeof x==='object') ? (x.val||'') : x; }
 function quizSubmitServer(hasEmail){
   const a = answers.map(x=>x.val);
   const payload = {
@@ -417,7 +438,10 @@ function quizSubmitServer(hasEmail){
       sessionStorage.setItem('cp_top3', JSON.stringify(res.top3));
       sessionStorage.setItem('cp_gate_done','0');
       const qs=new URLSearchParams(Object.assign({m:res.match, o:res.odds, f:res.fit, i:res.intent,
-        bot:res.bot?1:0, eg:0, lid:getLid()}, getUtm())).toString();
+        bot:res.bot?1:0, eg:0, lid:getLid(),
+        cq_timing:cqV(1), cq_regen:cqV(0), cq_id:cqV(3),
+        cq_goal:cqV(8), cq_dep:cqV(5), cq_pos:cqV(2)}, getUtm())).toString();
+      try{ setCookie('cp_cq', encodeURIComponent(JSON.stringify({cq_timing:cqV(1), cq_regen:cqV(0), cq_id:cqV(3), cq_goal:cqV(8), cq_dep:cqV(5), cq_pos:cqV(2), cq_match:res.match}))); }catch(e){}
       location.href='/start/result.html?'+qs;
     })
     .catch(err=>{
@@ -428,7 +452,8 @@ function quizSubmitServer(hasEmail){
         const sc2 = computeScore(hasEmail);
         const a2 = answers.map(x=>x.val);
         sessionStorage.setItem('cp_profile', JSON.stringify({cq_match:m0, o:oddsWithContra(m0), fit:sc2.fit, intent:sc2.intent, bot:botFilter(), cq_id:a2[3], cq_goal:a2[8], cq_dep:a2[5], cq_timing:a2[1], cq_regen:a2[0], lid:getLid()}));
-        const qs3=new URLSearchParams(Object.assign({m:m0, o:oddsWithContra(m0), f:sc2.fit, i:sc2.intent, bot:botFilter()?1:0, lid:getLid()}, getUtm())).toString();
+        const qs3=new URLSearchParams(Object.assign({m:m0, o:oddsWithContra(m0), f:sc2.fit, i:sc2.intent, bot:botFilter()?1:0, lid:getLid(),
+          cq_timing:cqV(1), cq_regen:cqV(0), cq_id:cqV(3), cq_goal:cqV(8), cq_dep:cqV(5), cq_pos:cqV(2)}, getUtm())).toString();
         location.href='/start/result.html?'+qs3;
       }catch(e2){}
     });
@@ -486,12 +511,14 @@ function top3Keys(m) {
 }
 function slideHref(k, rank, o) {
   const p = new URLSearchParams(location.search);
-  const qs = new URLSearchParams(Object.assign({
+  const pQ = profileQs();
+  const qV=(k2)=> p.get(k2) || pQ[k2] || ''; // X2: URL dulu, lalu profile
+  const qs = new URLSearchParams(cleanQS(Object.assign({
     m:k, o, f:p.get('f')||'', i:p.get('i')||'', pos:rank, eg:p.get('eg')||'',
     bot:p.get('bot')||'', contra:p.get('contra')||'', s:p.get('s')||'',
-    cq_timing:p.get('cq_timing')||'', cq_regen:p.get('cq_regen')||'', cq_id:p.get('cq_id')||'',
+    cq_timing:qV('cq_timing'), cq_regen:qV('cq_regen'), cq_id:qV('cq_id'),
     lid:p.get('lid')||getLid()
-  }, getUtm())).toString();
+  }, getUtm()))).toString();
   return (location.pathname.includes('/start/') ? 'result.html' : 'results.html') + '?' + qs;
 }
 function carouselHTML(top3, idx, o, fit, intent, oddsFor) {
@@ -541,10 +568,14 @@ function resultsRender() {
   const base = location.pathname.includes('/start/') ? '../' : '';
   const jumpParams = k => {
     const prof = JSON.parse(sessionStorage.getItem('cp_profile')||'{}');
-    const qs = new URLSearchParams(Object.assign({
-      lid:prof.lid||getLid(), cp:fit, cq_pos:prof.cq_pos||'', cq_id:prof.cq_id||'', cq_goal:prof.cq_goal||'',
-      cq_dep:prof.cq_dep||'', cq_timing:prof.cq_timing||'', cq_regen:prof.cq_regen||'', cq_match:k, o
-    }, getUtm())).toString();
+    const pU = new URLSearchParams(location.search); // X2: fallback URL result (cp_profile belum tentu ter-set di eg=0)
+    const cqC = profileQs();
+    const V = (k2)=> pU.get(k2) || prof[k2] || cqC[k2] || '';
+    const qs = new URLSearchParams(cleanQS(Object.assign({
+      lid:prof.lid||getLid(), cp:fit, cq_pos:V('cq_pos'), cq_id:V('cq_id'), cq_goal:V('cq_goal'),
+      cq_dep:V('cq_dep'), cq_timing:V('cq_timing'), cq_regen:V('cq_regen'), cq_match:k, o
+    }, getUtm()))).toString();
+    try{ window.__jq={loc:location.search.slice(0,200), qs:qs.slice(0,260), pU_t:pU.get('cq_timing'), prof_t:prof.cq_timing}; }catch(e){}
     return base + CARDS[k].slug + '.html?' + qs;
   };
 
@@ -691,8 +722,12 @@ function resultsRenderServer(box, p) {
       const cc0=CARDS[cur.k]||card;
       // v4.3.2 (Shelby): landing SUB2 = MATCH CAROUSEL (results) — slide antar-halaman dulu,
       // baru klik Continue → P1 single card. URL bersih (lid-based, token server-side).
+      const pCur=new URLSearchParams(location.search);
       const jumpQS=cleanQS(Object.assign({lid:getLid(), cp:fit,
-        cq_match:cur.k, o:cur.o, g:1}, getUtm()));
+        cq_match:cur.k, o:cur.o, g:1},
+        {cq_timing:pCur.get('cq_timing')||'', cq_regen:pCur.get('cq_regen')||'', cq_id:pCur.get('cq_id')||'',
+         cq_goal:pCur.get('cq_goal')||'', cq_dep:pCur.get('cq_dep')||'', cq_pos:pCur.get('cq_pos')||''},
+        profileQs(), getUtm()));
       location.href='https://cardpath.seputar-ntt.com/results.html?'+jumpQS;
     });
     return;
@@ -704,10 +739,12 @@ function resultsRenderServer(box, p) {
     const idx=Math.max(0,(parseInt(p.get('pos')||'1',10))-1);
     const cur=top3[idx]||{k:m,o:o};
     const cc=CARDS[cur.k]||card;
-    const jumpQS=new URLSearchParams(Object.assign({t:p.get('t')||'', lid:getLid(), cp:fit,
-      cq_match:cur.k, o:cur.o}, getUtm())).toString();
+    const jumpQS=new URLSearchParams(cleanQS(Object.assign({t:p.get('t')||'', lid:getLid(), cp:fit,
+      cq_match:cur.k, o:cur.o, cq_timing:p.get('cq_timing')||'', cq_regen:p.get('cq_regen')||'',
+      cq_id:p.get('cq_id')||'', cq_goal:p.get('cq_goal')||'', cq_dep:p.get('cq_dep')||'', cq_pos:p.get('cq_pos')||''}, getUtm()))).toString();
     const prevIdx=(idx-1+top3.length)%top3.length, nextIdx=(idx+1)%top3.length;
-    const slideHref=(r)=>'/start/result.html?'+new URLSearchParams(Object.assign({t:p.get('t')||'', m:top3[r]?top3[r].k:m, o:top3[r]?top3[r].o:o, pos:String(r+1), f:fit, i:intent, eg:1, lid:getLid()}, getUtm())).toString();
+    const slideHref=(r)=>'/start/result.html?'+new URLSearchParams(cleanQS(Object.assign({t:p.get('t')||'', m:top3[r]?top3[r].k:m, o:top3[r]?top3[r].o:o, pos:String(r+1), f:fit, i:intent, eg:1, lid:getLid(),
+      cq_timing:p.get('cq_timing')||'', cq_regen:p.get('cq_regen')||'', cq_id:p.get('cq_id')||'', cq_goal:p.get('cq_goal')||'', cq_dep:p.get('cq_dep')||'', cq_pos:p.get('cq_pos')||''}, getUtm()))).toString();
     const dots=top3.map((_,n)=>'<span class="cdots'+(n===idx?' on':'')+'">●</span>').join(' ');
     gr.innerHTML =
       '<div class="match">'+(idx>0?'Match '+(idx+1)+' of '+top3.length:'Your top match')+'</div>' +

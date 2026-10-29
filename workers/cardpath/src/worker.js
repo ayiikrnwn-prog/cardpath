@@ -1,3 +1,11 @@
+// X1: cookie cp_lid lintas-subdomain (fallback navigasi tanpa URL param)
+function applyLidCookie(headers, url) {
+  const lid = url.searchParams.get('lid');
+  if (lid && /^cp_[a-z0-9]+$/.test(lid)) {
+    headers.append('Set-Cookie', `cp_lid=${lid}; Domain=.seputar-ntt.com; Max-Age=2592000; Path=/; Secure; SameSite=Lax`);
+  }
+  return headers;
+}
 // CardPath Worker — static assets + API routes + server-side scoring (S1-S3 fix)
 // v4.3 engine port: scoring server-side, token-based result validation
 
@@ -80,6 +88,7 @@ export default {
           r2.headers.set('Content-Type','text/html; charset=utf-8');
           r2.headers.delete('Content-Length');
           r2.headers.set('Cache-Control','no-store');
+          applyLidCookie(r2.headers, url); // X1: first-touch cookie
           return r2;
         }
         const r2=new Response(assetResp.body, assetResp); r2.headers.set('Cache-Control','no-store'); return r2;
@@ -105,9 +114,11 @@ export default {
     if (__ct.includes('text/html') && request.method === 'GET') {
       let __html = await assetResp.text();
       if (!__html.includes('track.js')) __html = __html.replace('</head>', '<script src="/track.js" defer></script></head>');
+      if (!__html.includes('cp-fwd.js')) __html = __html.replace('</head>', '<script src="/cp-fwd.js" defer></script></head>');
       const __r2 = new Response(__html, assetResp);
       __r2.headers.set('Content-Type','text/html; charset=utf-8');
       __r2.headers.delete('Content-Length');
+      applyLidCookie(__r2.headers, url); // X1: SUB2 landing/P1/P2 cookie dari URL lid
       return __r2;
     }
     // GAM wrapper injection — hanya cardpath.* HTML (money pages), bukan card.* (SUB1 non-monetisasi)
