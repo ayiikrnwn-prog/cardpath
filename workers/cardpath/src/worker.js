@@ -379,7 +379,9 @@ async function handleQuizSubmit(request, env) {
   try {
     await env.DB.prepare('INSERT INTO results (lid, ts, token, meta_json) VALUES (?,?,?,?) ON CONFLICT(lid) DO UPDATE SET ts=excluded.ts, token=excluded.token, meta_json=excluded.meta_json')
       .bind(body.lid || ('cp_' + Date.now().toString(36)), Date.now(), token,
-        JSON.stringify({m, o, fit, intent, bot: isBot, top3: top3o})).run();
+        JSON.stringify({m, o, fit, intent, bot: isBot, top3: top3o,
+          cq_timing: vals[1]||'', cq_regen: vals[0]||'', cq_id: vals[3]||'',
+          cq_goal: vals[8]||'', cq_dep: vals[5]||'', cq_pos: vals[2]||'', utm_source: body.utm_source||''})).run();
   } catch(e) {}
 
   return json({
