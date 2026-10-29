@@ -126,6 +126,27 @@ export default {
         const cfg = '<script>window.CP_PIXEL={pixelId:\''+env.CP_PIXEL_ID+'\',gtagId:\''+(env.CP_GTAG_ID||'')+'\',gtagLabel:\''+(env.CP_GTAG_LABEL||'')+'\'};</'+'script>';
         __html = __html.replace('</body>', cfg + '<script src="/cp-pixel.js" defer></scr'+'ipt></body>');
       }
+      // Ad Slot Studio (money pages cardpath.*): render slot divs dari D1 config + CP_SLOTS + gam.js
+      if (url.hostname.startsWith('cardpath.') && !path.startsWith('/start') && !__html.includes('gam.js')) {
+        try {
+          if (!globalThis.__cpSlotsCache || Date.now()-globalThis.__cpSlotsCache.ts > 60000) {
+            const r = await env.DB.prepare('SELECT * FROM ad_slots WHERE enabled=1').all();
+            globalThis.__cpSlotsCache = { ts: Date.now(), slots: r.results||[] };
+          }
+          const slots = globalThis.__cpSlotsCache.slots;
+          let divsTop='', divsBottom='', cfgA=[];
+          slots.forEach((s,i)=>{
+            const pos = s.position||'top';
+            const div = '<div id="cp-ad-'+i+'" data-cpslot="'+s.slot_id+'" data-position="'+pos+'" style="min-height:'+(s.min_height||90)+'px;display:block;text-align:center;margin:14px auto;max-width:970px"></div>';
+            if (pos==='top') divsTop += div; else divsBottom += div;
+            cfgA.push({ id:'cp-ad-'+i, unit:s.unit_path, sizes:JSON.parse(s.sizes_json||'[]'), pos:pos });
+          });
+          const cfgTag = '<scr'+'ipt>window.CP_SLOTS='+JSON.stringify(cfgA)+'</scr'+'ipt>';
+          const gamTag = '<scr'+'ipt src="/gam.js" defer></scr'+'ipt>';
+          if (divsTop) __html = __html.replace(/(<body[^>]*>)/, '$1'+divsTop);
+          if (divsBottom || cfgTag) __html = __html.replace('</body>', divsBottom + cfgTag + gamTag + '</body>');
+        } catch(e) { console.log('slots err', String(e).slice(0,120)); }
+      }
       const __r2 = new Response(__html, assetResp);
       __r2.headers.set('Content-Type','text/html; charset=utf-8');
       __r2.headers.delete('Content-Length');
@@ -138,9 +159,30 @@ export default {
       let html = await assetResp.text();
       const isQuiz = path.startsWith('/start');
       if (!isQuiz && !html.includes('gam.js')) {
-        const adDiv = '<div id="cp-ad-top" style="min-height:90px;display:block;text-align:center;margin:14px auto;max-width:970px"></div>';
-        const gamTag = '<script src="/gam.js" defer></scr' + 'ipt>';
-        if (html.includes('</body>')) html = html.replace('</body>', adDiv + gamTag + '</body>');
+        // Ad Slot Studio: baca config slot dari D1 (cache in-memory 60s) → render per slot aktif
+        try {
+          if (!globalThis.__cpSlotsCache || Date.now()-globalThis.__cpSlotsCache.ts > 60000) {
+            const r = await env.DB.prepare('SELECT * FROM ad_slots WHERE enabled=1').all();
+            globalThis.__cpSlotsCache = { ts: Date.now(), slots: r.results||[] };
+          }
+          const slots = globalThis.__cpSlotsCache.slots;
+          let divsTop='', divsBottom='', cfg=[];
+          slots.forEach((s,i)=>{
+            const pos = s.position||'top';
+            const div = `<div id="cp-ad-${i}" data-cpslot="${s.slot_id}" data-position="${pos}" style="min-height:${s.min_height||90}px;display:block;text-align:center;margin:14px auto;max-width:970px"></div>`;
+            if (pos==='top') divsTop += div; else divsBottom += div;
+            cfg.push({ id:'cp-ad-'+i, unit:s.unit_path, sizes:JSON.parse(s.sizes_json||'[]'), pos:pos });
+          });
+          const cfgTag = '<script>window.CP_SLOTS='+JSON.stringify(cfg)+'</scr'+'ipt>';
+          const gamTag = '<script src="/gam.js" defer></scr'+'ipt>';
+          if (divsTop) html = html.replace(/(<body[^>]*>)/, '$1' + divsTop);
+          if (html.includes('</body>')) html = html.replace('</body>', divsBottom + cfgTag + gamTag + '</body>');
+        } catch(e) {
+          // fallback: slot default top (jika D1 gagal)
+          const adDiv = '<div id="cp-ad-top" style="min-height:90px;display:block;text-align:center;margin:14px auto;max-width:970px"></div>';
+          const gamTag = '<script src="/gam.js" defer></scr' + 'ipt>';
+          if (html.includes('</body>')) html = html.replace('</body>', adDiv + gamTag + '</body>');
+        }
       }
       const injected = new Response(html, assetResp);
       injected.headers.set('Content-Type','text/html; charset=utf-8');
