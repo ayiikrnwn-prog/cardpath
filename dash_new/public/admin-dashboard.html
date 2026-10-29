@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Metrics HQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0a2540; --body:#425466; --mut:#6b7c93; --faint:#8792a2;
+  --hair:#e6ebf1; --surface:#f6f9fc; --white:#fff;
+  --accent:#1f5eff; --accent-soft:#eef3ff;
+  --green:#24b47e; --green-soft:#e6f7f0;
+  --red:#df1b41; --red-soft:#fdeef2;
+  --amber:#c77700; --amber-soft:#fdf4e7;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:Inter,system-ui,sans-serif;color:var(--body);background:var(--surface);font-size:14px;line-height:1.5}
+h1,h2,h3{color:var(--ink);font-weight:600;letter-spacing:-0.01em}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
+a{color:var(--accent);text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+
+/* ---------- LOGIN ---------- */
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:
+  radial-gradient(1200px 600px at 70% -10%, #eef3ff 0%, transparent 60%), var(--surface)}
+#login .box{width:380px;background:#fff;border:1px solid var(--hair);border-radius:16px;padding:40px 36px}
+#login .logo{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+#login .mark{width:32px;height:32px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center}
+#login .mark svg{width:18px;height:18px;stroke:#fff}
+#login h1{font-size:20px;font-weight:600}
+#login p{color:var(--mut);font-size:13px;margin-bottom:24px}
+#login input{width:100%;padding:11px 14px;border:1px solid var(--hair);border-radius:10px;font-size:15px;margin-bottom:12px;transition:border .15s}
+#login input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(31,94,255,.12)}
+#login .btn{width:100%;padding:12px;background:var(--accent);color:#fff;border:0;border-radius:10px;font-size:14px;font-weight:500;transition:filter .15s}
+#login .btn:hover{filter:brightness(1.06)}
+#loginerr{display:none;color:var(--red);font-size:13px;margin-top:10px;text-align:center}
+
+/* ---------- SHELL ---------- */
+#app{display:none;min-height:100vh}
+#top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--hair)}
+#top .in{max-width:1440px;margin:0 auto;padding:0 20px;height:56px;display:flex;align-items:center;gap:24px}
+#top .brand{display:flex;align-items:center;gap:9px;font-weight:600;color:var(--ink);font-size:15px}
+#top .mark{width:26px;height:26px;border-radius:7px;background:var(--accent);display:flex;align-items:center;justify-content:center}
+#top .mark svg{width:14px;height:14px;stroke:#fff}
+#top nav{display:flex;gap:2px;flex:1}
+#top nav a{padding:7px 13px;border-radius:8px;color:var(--mut);font-size:13px;font-weight:450;transition:all .12s}
+#top nav a:hover{color:var(--ink);background:var(--surface)}
+#top nav a.on{color:var(--accent);background:var(--accent-soft);font-weight:500}
+#top .range{display:flex;gap:0;border:1px solid var(--hair);border-radius:8px;overflow:hidden}
+#top .range button{padding:6px 13px;font-size:12.5px;border:0;background:#fff;color:var(--mut);border-right:1px solid var(--hair)}
+#top .range button:last-child{border-right:0}
+#top .range button.on{background:var(--ink);color:#fff}
+#wrap{max-width:1440px;margin:0 auto;padding:28px 20px 60px}
+
+/* ---------- VERDICT ROW (role-metric framework) ---------- */
+.verdict{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:14px;overflow:hidden;margin-bottom:28px}
+.vstat{background:#fff;padding:18px 20px}
+.vstat .lbl{font-size:11px;font-weight:500;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.vstat .val{font-size:26px;font-weight:500;color:var(--ink);font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-0.03em}
+.vstat .val .cur{font-size:15px;color:var(--faint);font-weight:400;margin-right:2px}
+.vstat .sub{font-size:12px;color:var(--mut);margin-top:3px}
+.vstat .sub.neg{color:var(--red)} .vstat .sub.pos{color:var(--green)}
+.chip{display:inline-flex;align-items:center;font-size:9.5px;font-weight:600;letter-spacing:.05em;padding:1.5px 7px;border-radius:99px;text-transform:uppercase}
+.chip.real{background:var(--green-soft);color:var(--green)}
+.chip.derived{background:var(--accent-soft);color:var(--accent)}
+
+/* ---------- PANELS ---------- */
+.panel{background:#fff;border:1px solid var(--hair);border-radius:14px;margin-bottom:22px;overflow:hidden}
+.panel .head{padding:16px 20px;border-bottom:1px solid var(--hair);display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.panel .head h3{font-size:14.5px}
+.panel .head .note{font-size:12px;color:var(--faint)}
+.panel .body{padding:8px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 20px;font-size:11px;font-weight:500;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--hair);white-space:nowrap}
+td{padding:11px 20px;border-bottom:1px solid var(--hair);color:var(--body);white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--surface)}
+td.strong{color:var(--ink);font-weight:500}
+.r{text-align:right}th.r{text-align:right}
+td .num{font-size:13px}
+.pos{color:var(--green);font-weight:500}.neg{color:var(--red);font-weight:500}
+.empty{padding:36px 20px;text-align:center;color:var(--faint);font-size:13.5px}
+.empty svg{width:28px;height:28px;stroke:var(--hair);margin-bottom:10px;display:block;margin-inline:auto}
+.funnel-row{padding:12px 20px}
+.funnel-row .top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.funnel-row .top .nm{color:var(--ink);font-weight:450}
+.funnel-row .top .dr{font-size:11.5px;color:var(--faint)}
+.funnel-row .top .dr.bad{color:var(--red);font-weight:500}
+.bar{height:6px;background:var(--surface);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .4s cubic-bezier(.215,.61,.355,1)}
+.bar i.bad{background:var(--red)}
+.bar i.dim{background:#b4c6e6}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.tag{font-size:11px;padding:2px 9px;border-radius:99px;font-weight:500}
+.tag.high{background:var(--red-soft);color:var(--red)}
+.tag.medium{background:var(--amber-soft);color:var(--amber)}
+.tag.low{background:var(--surface);color:var(--mut)}
+.ack{font-size:12px;padding:5px 12px;border:1px solid var(--hair);border-radius:8px;background:#fff;color:var(--mut);transition:all .12s}
+.ack:hover{border-color:var(--accent);color:var(--accent)}
+
+.spark{display:inline-block;vertical-align:middle}
+.hist-row{display:flex;align-items:center;gap:10px;padding:5px 20px;font-size:12.5px}
+.hist-row .hn{width:64px;color:var(--faint);font-family:var(--mono)}
+.hist-row .hb{flex:1;height:14px;background:var(--surface);border-radius:3px;overflow:hidden;position:relative}
+.hist-row .hb i{display:block;height:100%;background:var(--accent);opacity:.85}
+.hist-row .hv{width:52px;text-align:right;font-family:var(--mono);color:var(--ink)}
+.hist-row .thresh{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--red)}
+.dl{font-size:11px;color:var(--faint);cursor:pointer;padding:2px 6px;border-radius:5px}
+.dl:hover{color:var(--accent);background:var(--accent-soft)}
+.crumb{font-size:12.5px;color:var(--mut);padding:10px 20px;border-bottom:1px solid var(--hair)}
+.crumb b{color:var(--ink)}
+.export{font-size:12px;padding:5px 12px;border:1px solid var(--hair);border-radius:8px;background:#fff;color:var(--mut)}
+.export:hover{color:var(--accent);border-color:var(--accent)}
+tr.drillable{cursor:pointer}
+.stg{display:flex;align-items:center;justify-content:space-between;padding:13px 20px;border-bottom:1px solid var(--hair);font-size:13.5px}
+.stg:last-child{border-bottom:0}
+.stg .sk{color:var(--ink);font-weight:450}
+.stg .sd{font-size:11.5px;color:var(--faint);margin-top:2px}
+.stg input{width:110px;padding:7px 10px;border:1px solid var(--hair);border-radius:8px;font-size:13px;font-family:var(--mono);text-align:right}
+.stg input:focus{outline:none;border-color:var(--accent)}
+.btn-save{margin:14px 20px;padding:9px 20px;background:var(--accent);color:#fff;border:0;border-radius:9px;font-size:13px;font-weight:500}
+@media(max-width:1000px){.verdict{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}#top nav{overflow-x:auto}}
+</style></head>
+<body>
+
+<div id="login">
+  <div class="box">
+    <div class="logo"><div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div><h1>Metrics HQ</h1></div>
+    <p>Performance & monetization control room</p>
+    <input type="password" id="pw" placeholder="Password" autofocus>
+    <button class="btn" onclick="doLogin()">Sign in</button>
+    <div id="loginerr">Wrong password</div>
+  </div>
+</div>
+
+<div id="app">
+<div id="top"><div class="in">
+  <div class="brand"><div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>Metrics HQ</div>
+  <nav>
+    <a href="#" data-panel="p0" data-title="Overview" class="on">Overview</a>
+    <a href="#" data-panel="p1" data-title="Cohorts">Cohorts</a>
+    <a href="#" data-panel="p2" data-title="Funnel">Funnel</a>
+    <a href="#" data-panel="p3" data-title="Ad Delivery">Ads</a>
+    <a href="#" data-panel="p4" data-title="Audience Value">Value</a>
+    <a href="#" data-panel="p5" data-title="Quality">Quality</a>
+    <a href="#" data-panel="p6" data-title="Content">Content</a>
+    <a href="#" data-panel="ads" data-title="Ad Slots">Ad Slots</a>
+    <a href="#" data-panel="site" data-title="Website Studio">Website</a>
+    <a href="#" data-panel="settings" data-title="Settings">Settings</a>
+  </nav>
+  <div class="range"><button data-r="7" class="on">7d</button><button data-r="14">14d</button><button data-r="30">30d</button></div>
+</div></div>
+
+<div id="wrap">
+  <div class="verdict" id="verdict"></div>
+  <div id="panels"></div>
+</div>
+</div>
+
+<script>
+var TOKEN=sessionStorage.getItem('hq_jwt')||'', RANGE='7', curPanel='p0';
+if(TOKEN){boot()}
+async function doLogin(){
+  var r=await fetch('/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:document.getElementById('pw').value})});
+  var d=await r.json();
+  if(d.ok){TOKEN=d.token;sessionStorage.setItem('hq_jwt',TOKEN);boot()}
+  else document.getElementById('loginerr').style.display='block';
+}
+function boot(){document.getElementById('login').style.display='none';document.getElementById('app').style.display='block';load()}
+document.querySelectorAll('#top nav a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();curPanel=a.dataset.panel;
+  document.querySelectorAll('#top nav a').forEach(x=>x.classList.remove('on'));a.classList.add('on');load()}));
+document.querySelectorAll('#top .range button').forEach(b=>b.addEventListener('click',()=>{RANGE=b.dataset.r;
+  document.querySelectorAll('#top .range button').forEach(x=>x.classList.remove('on'));b.classList.add('on');load()}));
+async function api(panel){var r=await fetch('/api/dash/'+panel+'?range='+RANGE,{headers:{Authorization:'Bearer '+TOKEN}});
+  if(r.status===401){sessionStorage.removeItem('hq_jwt');location.reload();return null}return r.json()}
+function fmt(n,d){return n==null?'—':Number(n).toLocaleString('en-US',{maximumFractionDigits:d||0})}
+var CUR={currency:'USD', fx_rate:16000};
+function usd(n){ return n==null?'<span class="num">—</span>':'<span class="num"><span class="cur">$</span>'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>'; }
+function money(n,cur){ // tampilkan sesuai currency settings (USD native / IDR via fx)
+  if(n==null) return '<span class="num">—</span>';
+  if(cur && cur.currency==='IDR'){ var v=n*(cur.fx_rate||16000);
+    return '<span class="num"><span class="cur">Rp</span>'+Math.round(v).toLocaleString('id-ID')+'</span>'; }
+  return usd(n);
+}
+function usd(n){return n==null?'<span class="num">—</span>':'<span class="num"><span class="cur">$</span>'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>'}
+function pct(n){return n==null?'—':(n*100).toFixed(1)+'%'}
+function chip(t,c){return '<span class="chip '+c+'">'+t+'</span>'}
+
+function exportPanel(p){
+  var a=document.createElement('a');a.href='/api/dash/'+p+'?range='+RANGE+'&format=csv';a.click();
+}
+async function load(){
+  var d=await api(curPanel); if(!d)return;
+  renderVerdict(curPanel,d);
+  var P=document.getElementById('panels');
+  ({p0:v0,p1:v1,p2:v2,p3:v3,p4:v4,p5:v5,p6:v6,settings:vS,ads:vA,site:vSite}[curPanel]||v0)(P,d);
+}
+function renderVerdict(p,d){
+  var V=document.getElementById('verdict');
+  var spend=0,camps=(d.spend||[]);camps.forEach(s=>spend+=s.spend||0);
+  if(d.currency) CUR=d.currency;
+  var S=0,Q=0,G=0,J=0,O=0,E=0,SC=0,SCN=0;(d.sessions||[]).forEach(s=>{S+=s.sessions||0;Q+=s.qc||0;G+=s.gc||0;J+=s.j||0;O+=s.outb||0;E+=s.eng||0;SC+=s.scr||0;SCN++});
+  var rev=0; Object.values(d.derived||{}).forEach(v=>rev+=v);
+  var net=rev-spend;
+  V.innerHTML=
+   '<div class="vstat"><div class="lbl">Net position '+chip('DERIVED','derived')+'</div><div class="val">'+money(net,d.currency)+'</div><div class="sub '+(net<0?'neg':'pos')+'">'+(spend>0?(net<0?'burning':'profitable'):'awaiting spend data')+'</div></div>'
+  +'<div class="vstat"><div class="lbl">Spend '+chip('REAL','real')+'</div><div class="val">'+(spend?money(spend,d.currency):'—')+'</div><div class="sub">'+camps.length+' campaigns'+(CUR.currency==='IDR'?' · @Rp'+fmt(CUR.fx_rate)+'/USD':'')+'</div></div>'
+  +'<div class="vstat"><div class="lbl">Sessions '+chip('REAL','real')+'</div><div class="val">'+fmt(S)+'</div><div class="sub">'+(S?avg(E,S)+'s avg engaged':'—')+'</div></div>'
+  +'<div class="vstat"><div class="lbl">Quiz → Gate '+chip('REAL','real')+'</div><div class="val">'+fmt(Q)+' → '+fmt(G)+'</div><div class="sub">'+(S?pct(Q/S)+' completion':'—')+'</div></div>'
+  +'<div class="vstat"><div class="lbl">Outbound '+chip('REAL','real')+'</div><div class="val">'+fmt(O)+'</div><div class="sub">'+(S?pct(O/S)+' of sessions':'—')+'</div></div>';
+}
+function avg(a,b){return b?Math.round(a/b):0}
+function panel(title,note,inner){return '<div class="panel"><div class="head"><h3>'+title+'</h3><span class="note">'+note+'</span></div><div class="body">'+inner+'</div></div>'}
+function emptyBox(msg){return '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M3 3v18h18M8 16v-5m4 5V8m4 11v-8"/></svg>'+msg+'</div>'}
+
+var drillState=null;
+function spark(series){ // series of numbers → svg
+  if(!series||series.length<2) return '';
+  var w=88,ht=22,mx=Math.max(...series,1);
+  var pts=series.map((v,i)=>[(i/(series.length-1))*w, ht-2-(v/mx)*(ht-6)]);
+  var d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  var last=pts[pts.length-1];
+  return '<svg class="spark" width="'+w+'" height="'+ht+'"><path d="'+d+'" fill="none" stroke="#1f5eff" stroke-width="1.5" stroke-linejoin="round"/><circle cx="'+last[0]+'" cy="'+last[1]+'" r="2" fill="#1f5eff"/></svg>';
+}
+function v0(P,d){
+  if(drillState){ return v0Drill(P,d); }
+  var spend=d.spend||[], sess={};(d.sessions||[]).forEach(s=>sess[s.camp]=s);
+  var camps={};spend.forEach(s=>{camps[s.utmc||s.camp]={spend:s.spend,clicks:s.clicks,impr:s.impr,platform:s.platform}});
+  Object.keys(sess).forEach(k=>{if(!camps[k])camps[k]={platform:'—'};camps[k].s=sess[k]});
+  // trend per campaign
+  var tr={};(d.trend||[]).forEach(t=>{if(!tr[t.camp])tr[t.camp]=[];tr[t.camp].push(t.sessions)});
+  var rows=Object.entries(camps).sort((a,b)=>(b[1].spend||0)-(a[1].spend||0));
+  var head='<div class="head"><h3>Campaigns</h3><div style="display:flex;gap:8px;align-items:center"><span class="note">spend × journey × NET</span><button class="export" onclick="exportPanel(\'p0\')">Export CSV</button></div></div>';
+  var body;
+  if(!rows.length){body=emptyBox('No spend connected yet — Meta ingestion runs every 6h. Sessions appear automatically from tracking.')}
+  else{
+    body='<table><thead><tr><th>Campaign</th><th>Platform</th><th>Trend</th><th class="r">Spend '+chip('REAL','real')+'</th><th class="r">Clicks</th><th class="r">Sessions</th><th class="r">Quiz ✓</th><th class="r">Gate ✓</th><th class="r">Jumps</th><th class="r">Outbound</th><th class="r">Engaged</th><th class="r">NET '+chip('DERIVED','derived')+'</th></tr></thead><tbody>';
+    rows.forEach(([k,v])=>{var s=v.s||{},rv=(d.derived||{})[k]||0,net=rv-(v.spend||0);
+      v._net=net; v._spend=v.spend;
+      body+='<tr class="drillable" onclick="drill(\''+k+'\')"><td class="strong">'+k+' <span class="dl">›</span></td><td>'+v.platform+'</td><td>'+spark(tr[k])+'</td><td class="r">'+money(v._spend,d.currency)+'</td><td class="r">'+fmt(v.clicks)+'</td><td class="r">'+fmt(s.sessions)+'</td><td class="r">'+fmt(s.qc)+'</td><td class="r">'+fmt(s.gc)+'</td><td class="r">'+fmt(s.j)+'</td><td class="r">'+fmt(s.outb)+'</td><td class="r">'+(s.sessions?avg(s.eng,s.sessions)+'s':'—')+'</td><td class="r '+(net<0?'neg':'pos')+'">'+money(net,d.currency)+'</td></tr>'});
+    body+='</tbody></table>';
+  }
+  P.innerHTML='<div class="panel">'+head+'<div class="body">'+body+'</div></div>';
+}
+async function drill(camp){
+  drillState=camp;
+  var r=await fetch('/api/dash/p0?range='+RANGE+'&level=content&campaign='+encodeURIComponent(camp),{headers:{Authorization:'Bearer '+TOKEN}});
+  var d=await r.json();
+  var rows=(d.rows||[]).map(x=>{var net='';
+    return '<tr><td class="strong">'+(x.content||'(none)')+'</td><td class="r">'+fmt(x.sessions)+'</td><td class="r">'+fmt(x.qc)+'</td><td class="r">'+fmt(x.j)+'</td><td class="r">'+fmt(x.outb)+'</td><td class="r">'+(x.sessions?avg(x.eng,x.sessions)+'s':'—')+'</td></tr>'}).join('');
+  document.getElementById('panels').innerHTML='<div class="panel"><div class="crumb"><a href="#" onclick="drillBack(event)">Campaigns</a> › <b>'+camp+'</b> — ad groups (utm_content)</div><div class="body>'+
+    (rows?'<table><thead><tr><th>Ad Group</th><th class="r">Sessions</th><th class="r">Quiz ✓</th><th class="r">Jumps</th><th class="r">Outbound</th><th class="r">Engaged</th></tr></thead><tbody>'+rows+'</tbody></table>':emptyBox('No sessions for this campaign yet.'))+'</div></div>';
+}
+function drillBack(e){e.preventDefault();drillState=null;load()}
+function v0Drill(P,d){drillState=null;v0(P,d)}
+
+function hist(bins,thresh,fmtB){
+  if(!bins||!bins.length) return emptyBox('No scored results yet.');
+  var mx=Math.max(...bins.map(b=>b.count),1);
+  return bins.map(b=>{
+    var pctw=Math.max(3,Math.round(b.count/mx*100));
+    var inThresh=(b.bin>=thresh&&b.bin<thresh+5);
+    return '<div class="hist-row"><span class="hn">'+b.bin+'–'+(b.bin+4)+'</span><div class="hb"><i style="width:'+pctw+'%;'+(inThresh?'background:var(--red)':'')+'"></i></div><span class="hv">'+fmt(b.count)+'</span></div>';
+  }).join('')+'<div style="padding:8px 20px;font-size:11.5px;color:var(--faint)">Red bin = contains threshold '+thresh+'</div>';
+}
+function v1(P,d){
+  var m=(d.matrix||[]);
+  var tbl=m.length?'<table><thead><tr><th>cq_pos</th><th>cq_timing</th><th class="r">Users</th><th class="r">Jump rate</th><th class="r">Avg FIT</th><th class="r">Avg INTENT</th></tr></thead><tbody>'
+    +m.map(x=>'<tr><td class="strong">'+x.pos+'</td><td>'+x.timing+'</td><td class="r">'+fmt(x.n)+'</td><td class="r">'+pct(x.n?x.jumped/x.n:0)+'</td><td class="r">'+(x.avgFit!=null?x.avgFit:'—')+'</td><td class="r">'+(x.avgIntent!=null?x.avgIntent:'—')+'</td></tr>').join('')+'</tbody></table>'
+    :emptyBox('No scored quiz results yet.');
+  var histHtml='<div style="padding:14px 20px 4px;font-size:12px;color:var(--mut);font-weight:500">FIT distribution (threshold 30) — '+fmt(d.total)+' results</div>'+hist(d.hist&&d.hist.fit,30)
+    +'<div style="height:1px;background:var(--hair);margin:12px 0"></div>'
+    +'<div style="padding:4px 20px;font-size:12px;color:var(--mut);font-weight:500">INTENT distribution (threshold 35)</div>'+hist(d.hist&&d.hist.intent,35);
+  P.innerHTML='<div class="panel"><div class="head"><h3>Cohort Matrix</h3><div style="display:flex;gap:8px;align-items:center"><span class="note">cq_pos × cq_timing · calibration input Fase C</span><button class="export" onclick="exportPanel(\'p1\')">Export CSV</button></div></div><div class="body">'+tbl+'</div></div>'
+   +'<div class="panel"><div class="head"><h3>Score Distributions</h3><span class="note">FIT & INTENT engine output — garis merah = threshold kalibrasi</span></div><div class="body">'+histHtml+'</div></div>';
+}
+
+function v2(P,d){
+  var f=d.funnel||[];var counts={};f.forEach(x=>counts[x.event]=x.c);
+  var steps=[['session_start','Sessions'],['page_view','Pageviews'],['quiz_complete','Quiz completed'],['gate_completed','Email gate ✓'],['jump_click','Jumped to money pages'],['sub2_landing','Landed SUB2'],['p1_view','Card page view'],['p2_view','Detail page view'],['outbound_click','Outbound click']];
+  var maxV=Math.max(1,...steps.map(s=>counts[s[0]]||0));
+  var prev=null;
+  var inner=steps.map((s,i)=>{var v=counts[s[0]]||0;var w=Math.max(2,Math.round(v/maxV*100));
+    var drop=prev!=null&&prev>0?Math.round((1-v/prev)*100):null;
+    return '<div class="funnel-row"><div class="top"><span class="nm">'+s[1]+'</span><span><span class="num" style="color:var(--ink)">'+fmt(v)+'</span> '+(drop!=null?'<span class="dr'+(drop>40?' bad':'')+'">−'+drop+'%</span>':'')+'</span></div><div class="bar"><i class="'+(drop>40?'bad':(i<2?'dim':''))+'" style="width:'+w+'%"></i></div></div>';
+  }).join('');
+  if(!(f||[]).length) inner=emptyBox('No events in this range yet.');
+  P.innerHTML='<div class="panel"><div class="head"><h3>Conversion Funnel</h3><div style="display:flex;gap:8px;align-items:center"><span class="note">'+chip('REAL','real')+' first-party · red = drop-off >40%</span><button class="export" onclick="exportPanel(\'p2\')">Export CSV</button></div></div><div class="body>'+inner+'</div></div>';
+}
+function v3(P,d){
+  var hl=(d.health||[]).map(x=>{var fill=x.requested?x.rendered/x.requested:0;var view=x.rendered?x.viewable/x.rendered:0;
+    return '<tr><td class="strong">'+(x.slot||'—')+'</td><td class="r">'+fmt(x.requested)+'</td><td class="r">'+fmt(x.rendered)+'</td><td class="r '+(fill<0.6?'neg':'pos')+'">'+pct(fill)+'</td><td class="r">'+pct(view)+'</td></tr>'}).join('');
+  var wn=(d.winners||[]).slice(0,10).map(x=>'<tr><td class="strong num">'+(x.line_item_id||'(house / blank)')+'</td><td class="r">'+fmt(x.c)+'</td></tr>').join('');
+  var inner=hl? '<table><thead><tr><th>Slot</th><th class="r">Requested</th><th class="r">Rendered</th><th class="r">Fill</th><th class="r">Viewable</th></tr></thead><tbody>'+hl+'</tbody></table>'
+    +'<div style="height:1px;background:var(--hair);margin:6px 0"></div>'
+    +(wn?'<table><thead><tr><th>Winning line items (top 10)</th><th class="r">Impressions</th></tr></thead><tbody>'+wn+'</tbody></table>':'')
+    : emptyBox('No GAM telemetry yet — slots fire when ads are requested.');
+  var lat=d.latency||{};
+  var latRow='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hair);border-bottom:1px solid var(--hair)">'
+   +'<div class="vstat" style="border:0"><div class="lbl">Latency p50</div><div class="val" style="font-size:20px">'+(lat.p50!=null?lat.p50+'ms':'—')+'</div><div class="sub">'+fmt(lat.n)+' renders</div></div>'
+   +'<div class="vstat" style="border:0"><div class="lbl">Latency p95</div><div class="val" style="font-size:20px;color:'+(lat.p95>1500?'var(--red)':'var(--ink)')+'">'+(lat.p95!=null?lat.p95+'ms':'—')+'</div><div class="sub">target < 1500ms</div></div>'
+   +'<div class="vstat" style="border:0"><div class="lbl">Slots active</div><div class="val" style="font-size:20px">'+fmt((d.health||[]).length)+'</div><div class="sub">with traffic</div></div></div>';
+  P.innerHTML='<div class="panel"><div class="head"><h3>Ad Delivery</h3><div style="display:flex;gap:8px;align-items:center"><span class="note">'+chip('REAL','real')+' GPT telemetry</span><button class="export" onclick="exportPanel(\'p3\')">Export CSV</button></div></div>'+latRow+'<div class="body">'+inner+'</div></div>';
+}
+function v4(P,d){
+  var rows=(d.matrix||[]).slice(0,25).map(x=>{var kv={};try{kv=JSON.parse(x.kv_json||'{}')}catch(e){}
+    var combo=Object.entries(kv).map(e=>e[0]+'='+e[1]).join(' · ')||'(no targeting)';
+    var fill=x.impr?x.rendered/x.impr:0;
+    return '<tr><td class="strong" style="font-size:12px">'+combo+'</td><td class="r">'+fmt(x.impr)+'</td><td class="r">'+fmt(x.rendered)+'</td><td class="r">'+pct(fill)+'</td><td class="r">'+(x.premium?Math.round(x.premium/x.impr*100)+'%':'—')+'</td><td class="r">'+(x.eCPM!=null?usd(x.eCPM):'<span style="color:var(--faint)">pending</span>')+'</td></tr>'}).join('');
+  P.innerHTML='<div class="panel"><div class="head"><h3>Audience Value</h3><div style="display:flex;gap:8px;align-items:center"><span class="note">'+chip('REAL','real')+' · eCPM '+chip('DERIVED','derived')+' ('+fmt(d.adsenseDays||0)+' AdSense days)</span><button class="export" onclick="exportPanel(\'p4\')">Export CSV</button></div></div><div class="body>'+(rows?'<table><thead><tr><th>Targeting combo</th><th class="r">Impr</th><th class="r">Rendered</th><th class="r">Fill</th><th class="r">Premium win</th><th class="r">eCPM</th></tr></thead><tbody>'+rows+'</tbody></table>':emptyBox('No impressions logged yet.'))+'</div></div>';
+}
+function v5(P,d){
+  var q='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hair);margin-bottom:4px">'
+   +'<div class="vstat" style="border:0"><div class="lbl">Bot rate '+chip('REAL','real')+'</div><div class="val" style="color:'+(d.bot_rate>0.2?'var(--red)':'var(--ink)')+'">'+pct(d.bot_rate)+'</div><div class="sub">'+fmt(d.bot_total)+' scored results</div></div>'
+   +'<div class="vstat" style="border:0"><div class="lbl">Open alerts</div><div class="val">'+fmt((d.alerts||[]).length)+'</div><div class="sub">unacknowledged</div></div>'
+   +'<div class="vstat" style="border:0"><div class="lbl">Threshold</div><div class="val" style="font-size:18px">bot 20%</div><div class="sub">editable in settings</div></div></div>';
+  var al='';
+  if((d.alerts||[]).length){
+    al='<table><thead><tr><th>Alert</th><th>Severity</th><th></th></tr></thead><tbody>'+d.alerts.map(a=>
+      '<tr><td class="strong">'+a.message+'</td><td><span class="tag '+a.severity+'">'+a.severity+'</span></td><td class="r"><button class="ack" onclick="ack('+a.id+')">Acknowledge</button></td></tr>').join('')+'</tbody></table>';
+  } else al='<div class="empty">No open alerts — engine runs hourly.</div>';
+  var fr=(d.fraudLids||[]).map(x=>'<tr><td class="strong num" style="font-size:12px">'+x.lid+'</td><td class="r">'+fmt(x.c)+' sessions</td></tr>').join('');
+  var fs=(d.fraudSessions||[]).map(x=>'<tr><td class="strong num" style="font-size:12px">'+x.session_id.slice(0,14)+'…</td><td class="r">'+fmt(x.pageviews)+' views</td><td class="r">'+fmt(x.max_scroll_pct)+'% scroll</td></tr>').join('');
+  var fraud='<div class="grid2" style="padding:0"><div>'+(fr?'<table><thead><tr><th>Suspicious lids (>3 sessions)</th><th class="r"></th></tr></thead><tbody>'+fr+'</tbody></table>':'<div class="empty">No lid anomalies.</div>')+'</div>'
+   +'<div>'+(fs?'<table><thead><tr><th>High-pageview sessions (>10)</th><th class="r"></th><th class="r"></th></tr></thead><tbody>'+fs+'</tbody></table>':'<div class="empty">No session anomalies.</div>')+'</div></div>';
+  P.innerHTML=panel('Traffic Quality',chip('REAL','real')+' bot scoring server-side',q)
+   +'<div class="panel"><div class="head"><h3>Fraud Signals</h3><span class="note">review manually — bukan auto-ban</span></div><div class="body">'+fraud+'</div></div>'
+   +'<div class="panel"><div class="head"><h3>Alerts</h3><span class="note">spend · no-fill · bots · data gaps</span></div><div class="body">'+al+'</div></div>';
+}
+function v6(P,d){
+  var rows=(d.pages||[]).slice(0,30).map(x=>'<tr><td class="strong" style="font-size:12.5px">'+x.page+'</td><td class="r">'+fmt(x.pageviews)+'</td></tr>').join('');
+  var q=(d.quality||[]).filter(x=>x.pageviews>0).slice(0,30).map(x=>'<tr><td class="strong" style="font-size:12.5px">'+x.page+'</td><td class="r">'+fmt(x.pageviews)+'</td><td class="r">'+(x.sessions?avg(x.eng,x.sessions)+'s':'—')+'</td><td class="r">'+(x.sessions?Math.round(x.scr/x.sessions)+'%':'—')+'</td></tr>').join('');
+  P.innerHTML='<div class="panel"><div class="head"><h3>Content Performance</h3><div style="display:flex;gap:8px;align-items:center"><span class="note">'+chip('REAL','real')+' money pages · revenue share pending AdSense API</span><button class="export" onclick="exportPanel(\'p6\')">Export CSV</button></div></div><div class="body>'+(q?'<table><thead><tr><th>Page</th><th class="r">Pageviews</th><th class="r">Avg engaged</th><th class="r">Avg scroll</th></tr></thead><tbody>'+q+'</tbody></table>':emptyBox('No page views in this range.'))+'</div></div>';
+}
+async function ack(id){await fetch('/api/dash/ack',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify({alertId:id})});load()}
+async function vA(P){
+  var d=await api('ads'); if(!d) return;
+  var perf={}; (d.perf||[]).forEach(x=>perf[x.slot]=x);
+  var adv={}; (d.advertisers||[]).forEach(x=>{ (adv[x.slot]=adv[x.slot]||[]).push(x); });
+  var lat=d.latency||{};
+  var rows=(d.slots||[]).map(s=>{
+    var p=perf[s.slot]||{requested:0,rendered:0,viewable:0};
+    var fill=p.requested?Math.round(p.rendered/p.requested*100):0;
+    var view=p.rendered?Math.round(p.viewable/p.rendered*100):0;
+    var l=lat[s.slot];
+    var advHtml=(adv[s.slot]||[]).slice(0,3).map(x=>'<span class="dl">adv '+x.advertiser_id+' ('+fmt(x.c)+')</span>').join(' ')||'<span class="dl">no advertisers yet</span>';
+    return '<tr><td class="strong">'+s.slot_id+'<br><span style="font-size:11px;color:var(--faint)">'+s.unit_path+'</span></td>'
+      +'<td>'+s.position+'<br><span style="font-size:11px;color:var(--faint)">'+s.page_pattern+'</span></td>'
+      +'<td class="r">'+fmt(p.requested)+'</td><td class="r">'+fmt(p.rendered)+'</td>'
+      +'<td class="r '+(fill<60&&p.requested?'neg':'pos')+'">'+fill+'%</td>'
+      +'<td class="r">'+view+'%</td>'
+      +'<td class="r">'+(l?l.p50+'ms':'—')+'</td>'
+      +'<td class="r">'+(l?l.p95+'ms':'—')+'</td>'
+      +'<td>'+advHtml+'</td>'
+      +'<td><span class="chip '+(s.enabled?'real':'alert')+'">'+(s.enabled?'ACTIVE':'OFF')+'</span></td>'
+      +'<td class="r"><button class="ack" onclick="slotToggle(\''+s.slot_id+'\','+(s.enabled?0:1)+')">'+(s.enabled?'Disable':'Enable')+'</button> '
+      +'<button class="ack" onclick="slotDel(\''+s.slot_id+'\')">Del</button></td></tr>';
+  }).join('');
+  var tbl=rows?'<table><thead><tr><th>Slot</th><th>Placement</th><th class="r">Req</th><th class="r">Rendered</th><th class="r">Fill</th><th class="r">Viewable</th><th class="r">p50</th><th class="r">p95</th><th>Advertisers menang</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>'
+    :emptyBox('No slots configured.');
+  P.innerHTML='<div class="panel"><div class="head"><h3>Ad Slots — '+chip('REAL','real')+' performance per slot</h3><span class="note">slot config = live (tanpa deploy)</span></div><div class="body">'+tbl+'</div></div>'
+   +'<div class="panel"><div class="head"><h3>Tambah Slot Baru</h3><span class="note">unit path dari GAM → slot tayang di halaman money pages otomatis</span></div><div class="body">'
+   +'<div class="stg"><div class="sk">Slot ID (nama pendek)</div><input id="ns_id" placeholder="misal: sidebar"></div>'
+   +'<div class="stg"><div class="sk">GAM Unit Path</div><input id="ns_unit" placeholder="/23382571087/cardpath/cardpath_sidebar" style="width:320px"></div>'
+   +'<div class="stg"><div class="sk">Posisi di halaman</div><input id="ns_pos" placeholder="top / sidebar / inline / interstitial"></div>'
+   +'<div class="stg"><div class="sk">Min height (px)</div><input id="ns_mh" value="90"></div>'
+   +'<button class="btn-save" onclick="slotAdd()">Tambah slot</button><span id="nsmsg" style="font-size:12px;color:var(--green);padding-left:8px"></span></div></div>'
+   +'<div class="panel"><div class="head"><h3>KV Signal Coverage — sinyal profil ke lelang AdX</h3><span class="note">'+chip('REAL','real')+' dari hasil quiz · % traffic membawa nilai valid</span></div><div class="body">'
+   +'<table><thead><tr><th>KV Key</th><th class="r">Coverage</th><th>Distribusi top 5</th><th class="r">Dalam enum GAM</th></tr></thead><tbody>'
+   +Object.entries(d.kvStats||{}).map(([kn,st])=>{
+      var cov=st.coverage||0;
+      var tops=(st.topList||[]).map(x=>'<span class="dl">'+x.v+' ('+fmt(x.c)+')</span>').join(' ')||'<span class="dl">—</span>';
+      return '<tr><td class="strong">'+kn+'</td><td class="r"><span class="'+(cov>=70?'pos':cov>=30?'':'neg')+'" style="font-weight:500">'+cov+'%</span></td><td>'+tops+'</td><td class="r">'+st.inEnum+'/'+st.topList.length+'</td></tr>';
+   }).join('')
+   +'</tbody></table><div style="padding:10px 20px;font-size:12px;color:var(--faint)">Coverage tinggi = lelang AdX bisa target profil ini. Coverage rendah = jawaban quiz tidak sampai / enum mismatch.</div></div></div>'
+   +'<div class="panel"><div class="head"><h3>Cara kerja singkat</h3></div><div class="body"><div style="padding:14px 20px;font-size:13px;color:var(--mut);line-height:1.7">'
+   +'Slot ACTIVE = worker menyisipkan container + gam.js mendefinisikan slot itu di halaman money pages (cardpath.*).<br>'
+   +'Slot OFF = container tidak disisipkan (iklan berhenti, data historis tetap ada).<br>'
+   +'Telemetry (requested/rendered/viewable/latency/advertiser) mengalir otomatis dari gam.js → /api/adlog → D1.</div></div></div>';
+}
+async function slotToggle(id,en){
+  await fetch('/api/dash/ads',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify({action:'toggle',slot_id:id,enabled:!!en})});
+  load();
+}
+async function slotDel(id){
+  if(!confirm('Hapus slot '+id+'? Data performa historis tetap ada di D1.')) return;
+  await fetch('/api/dash/ads',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify({action:'delete',slot_id:id})});
+  load();
+}
+async function slotAdd(){
+  var body={action:'add',slot_id:document.getElementById('ns_id').value.trim(),
+    unit_path:document.getElementById('ns_unit').value.trim(),
+    position:document.getElementById('ns_pos').value.trim()||'top',
+    min_height:parseInt(document.getElementById('ns_mh').value)||90,
+    sizes:['fluid']};
+  var r=await fetch('/api/dash/ads',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify(body)});
+  var d=await r.json();
+  var m=document.getElementById('nsmsg'); m.textContent=d.ok?'Slot ditambahkan — aktif sekarang ✓':'Gagal';
+  if(d.ok) setTimeout(()=>{vA(document.getElementById('panels'));},600);
+}
+async function vS(P){
+  var r=await api('settings'); var s={}; ((r&&r.settings)||[]).forEach(x=>{try{s[x.key]=JSON.parse(x.value)}catch(e){s[x.key]=x.value}});
+  var defs=[['budget_cap_usd','Budget cap harian (USD — native platform)','Spend harian melebihi ini = alert high. Sekarang: '+(s.budget_cap_usd||500)],
+            ['bot_rate_threshold','Bot rate threshold (0-1)','Bot rate 24h di atas ini = alert. Sekarang: '+(s.bot_rate_threshold||0.2)],
+            ['no_fill_threshold','No-fill threshold (0-1)','No-fill 2 jam per slot di atas ini = alert. Default 0.4'],
+            ['currency','Mata uang tampilan (USD/IDR)','Sekarang: '+(s.currency||'USD')+' — angka native platform selalu USD (REAL), tampilan dikonversi'],
+            ['fx_rate','Kurs USD→IDR untuk tampilan','Sekarang: '+(s.fx_rate||16000)+' — update manual sesuai kurs terkini']];
+  P.innerHTML='<div class="panel"><div class="head"><h3>Alert Thresholds</h3><span class="note">dipakai alert engine per jam</span></div><div class="body">'
+   +defs.map(d=>{ var isCur=d[0]==='currency';
+     var field = isCur
+       ? '<select id="st_'+d[0]+'" style="padding:7px 10px;border:1px solid var(--hair);border-radius:8px;font-size:13px"><option value="USD"'+((s.currency||'USD')==='USD'?' selected':'')+'>USD ($)</option><option value="IDR"'+(s.currency==='IDR'?' selected':'')+'>IDR (Rp)</option></select>'
+       : '<input id="st_'+d[0]+'" value="'+(s[d[0]]!=null?s[d[0]]:'')+'" placeholder="'+d[1].split(' ')[0]+'">';
+     return '<div class="stg"><div><div class="sk">'+d[1]+'</div><div class="sd">'+d[2]+'</div></div>'+field+'</div>'; }).join('')
+   +'<button class="btn-save" onclick="saveSettings()">Save thresholds</button><span id="stmsg" style="font-size:12px;color:var(--green);padding-left:8px"></span></div></div>'
+   +'<div class="panel"><div class="head"><h3>Alert Delivery</h3><span class="note">Telegram</span></div><div class="body"><div class="stg"><div><div class="sk">Telegram notifications</div><div class="sd">Set secret TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID via wrangler — alert otomatis terkirim. Stub test:</div></div><button class="ack" onclick="testAlert()">Send test</button></div></div></div>';
+}
+async function saveSettings(){
+  var body={};
+  ['budget_cap_usd','bot_rate_threshold','no_fill_threshold','fx_rate'].forEach(k=>{var el=document.getElementById('st_'+k); if(el&&el.value!==''){var v=parseFloat(el.value); if(!isNaN(v))body[k]=v;}});
+  var cel=document.getElementById('st_currency'); if(cel&&cel.value) body.currency=cel.value.trim().toUpperCase();
+  var r=await fetch('/api/dash/settings',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify(body)});
+  document.getElementById('stmsg').textContent=r.ok?'Saved ✓':'Failed';
+  setTimeout(()=>{var m=document.getElementById('stmsg'); if(m)m.textContent=''},2500);
+}
+async function testAlert(){
+  var r=await fetch('/api/dash/settings',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify({})});
+  var msg=r.ok?'Alert path OK — Telegram kirim bila secret terpasang':'Failed';
+  alert(msg);
+}
+async function vSite(P){
+  var d=await api('site'); if(!d) return;
+  var sub = window.__wsSub||'inj';
+  var h='<div class="filters" style="gap:0;border:1px solid var(--hair);border-radius:8px;overflow:hidden;width:max-content;margin-bottom:16px">'
+   +[['inj','Head & Footer'],['art','Artikel'],['menu','Menus']].map(t=>'<button style="padding:7px 16px;border:0;background:'+(sub===t[0]?'var(--ink)':'#fff')+';color:'+(sub===t[0]?'#fff':'var(--mut)')+';font-size:13px;cursor:pointer" onclick="wsSub(\''+t[0]+'\')">'+t[1]+'</button>').join('')
+   +'</div><div id="wsbody"></div>';
+  P.innerHTML=h;
+  if(sub==='inj') renderInj(document.getElementById('wsbody'), d);
+  if(sub==='art') renderArt(document.getElementById('wsbody'), d);
+  if(sub==='menu') renderMenu(document.getElementById('wsbody'), d);
+}
+function wsSub(s){ window.__wsSub=s; load(); }
+function renderInj(el,d){
+  var rows=(d.injections||[]).map(i=>'<tr><td class="strong">'+i.placement+'</td><td><span class="chip '+(i.scope==='sub1'?'derived':i.scope==='sub2'?'real':'derived')+'">'+i.scope+'</span></td><td style="font-family:var(--mono);font-size:11.5px;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(i.code||'').slice(0,90).replace(/</g,'&lt;')+'</td><td><span class="chip '+(i.enabled?'real':'alert')+'">'+(i.enabled?'ON':'OFF')+'</span></td><td class="r"><button class="ack" onclick="injToggle('+i.id+','+(i.enabled?0:1)+')">'+(i.enabled?'Off':'On')+'</button> <button class="ack" onclick="injDel('+i.id+')">Del</button></td></tr>').join('');
+  el.innerHTML='<div class="panel"><div class="head"><h3>Head & Footer Injections</h3><span class="note">kode disuntik ke SEMUA halaman sesuai scope — live tanpa deploy</span></div><div class="body">'
+   +(rows?'<table><thead><tr><th>Placement</th><th>Scope</th><th>Kode</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>':emptyBox('Belum ada injeksi.'))
+   +'</div></div><div class="panel"><div class="head"><h3>Tambah Injeksi</h3><span class="note">paste kode apa pun — pixel, verifikasi, widget</span></div><div class="body">'
+   +'<div class="stg"><div class="sk">Placement</div><select id="inj_place" style="padding:7px 10px;border:1px solid var(--hair);border-radius:8px"><option value="head">HEAD (sebelum </head>)</option><option value="body_end">BODY END (sebelum </body>)</option></select>'
+   +'<div class="sk" style="margin-left:20px">Scope</div><select id="inj_scope" style="padding:7px 10px;border:1px solid var(--hair);border-radius:8px"><option value="both">Kedua subdomain</option><option value="sub1">SUB1 saja (card.*)</option><option value="sub2">SUB2 saja (cardpath.*)</option></select></div>'
+   +'<div style="padding:10px 20px"><textarea id="inj_code" placeholder="paste kode di sini..." style="width:100%;min-height:120px;padding:12px;border:1px solid var(--hair);border-radius:10px;font-family:var(--mono);font-size:12px"></textarea></div>'
+   +'<div style="padding:0 20px 6px"><input id="inj_note" placeholder="catatan (misal: Meta Pixel backup)" style="width:100%;padding:9px 12px;border:1px solid var(--hair);border-radius:8px;font-size:13px"></div>'
+   +'<button class="btn-save" onclick="injSave()">Simpan & aktifkan</button><span id="injmsg" style="font-size:12px;color:var(--green);padding-left:8px"></span></div></div>';
+}
+async function injSave(){
+  var b={action:'inj_save',placement:document.getElementById('inj_place').value,scope:document.getElementById('inj_scope').value,
+    code:document.getElementById('inj_code').value,note:document.getElementById('inj_note').value};
+  var r=await fetch('/api/dash/site',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify(b)});
+  var d=await r.json(); document.getElementById('injmsg').textContent=d.ok?'Tersimpan & aktif ✓':'Gagal';
+  if(d.ok) setTimeout(load,600);
+}
+async function injToggle(id,en){ await fetch('/api/dash/site',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify({action:'inj_toggle',id:id,enabled:!!en})}); load(); }
+async function injDel(id){ if(!confirm('Hapus injeksi ini?')) return; await fetch('/api/dash/site',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify({action:'inj_del',id:id})}); load(); }
+function renderArt(el,d){
+  var arts=(d.articles||[]);
+  var rows=arts.map(a=>'<tr><td class="strong">'+a.title+'</td><td><a href="https://cardpath.seputar-ntt.com/articles/'+a.slug+'" target="_blank" style="font-size:12px">/'+a.slug+'</a></td><td><span class="chip '+(a.published?'real':'alert')+'">'+(a.published?'LIVE':'DRAFT')+'</span></td><td class="r">'+new Date(a.updated_ts).toLocaleDateString('en-GB',{day:'numeric',month:'short'})+'</td><td class="r"><button class="ack" onclick="artEdit(\''+a.slug+'\')">Edit</button> <button class="ack" onclick="artDel(\''+a.slug+'\')">Del</button></td></tr>').join('');
+  el.innerHTML='<div class="panel"><div class="head"><h3>Artikel</h3><span class="note">server-rendered di cardpath.seputar-ntt.com/articles/… · schema FAQ otomatis</span></div><div class="body">'
+   +(rows?'<table><thead><tr><th>Judul</th><th>URL</th><th>Status</th><th class="r">Update</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>':emptyBox('Belum ada artikel studio.'))
+   +'</div></div>'
+   +'<div class="panel" id="arteditor"><div class="head"><h3 id="arted_title">Artikel Baru</h3><span class="note">markdown: ## heading · - list · **bold** · [link](url)</span></div><div class="body">'
+   +'<div class="stg"><div class="sk">Judul</div><input id="art_title" style="flex:1;max-width:400px" placeholder="How to Build Credit Fast"></div>'
+   +'<div class="stg"><div class="sk">Slug</div><input id="art_slug" placeholder="how-to-build-credit-fast" style="flex:1;max-width:300px"></div>'
+   +'<div class="stg"><div class="sk">Meta desc</div><input id="art_meta" style="flex:1;max-width:420px" placeholder="meta description untuk SEO"></div>'
+   +'<div class="stg"><div class="sk">Sub</div><select id="art_sub" style="padding:7px 10px;border:1px solid var(--hair);border-radius:8px"><option value="sub2">cardpath.*</option><option value="sub1">card.*</option></select>'
+   +'<div class="sk" style="margin-left:16px">Status</div><select id="art_pub" style="padding:7px 10px;border:1px solid var(--hair);border-radius:8px"><option value="1">Published</option><option value="0">Draft</option></select></div>'
+   +'<div style="padding:10px 20px"><textarea id="art_body" placeholder="# Judul besar&#10;&#10;paragraf...&#10;&#10;## Sub-heading&#10;- list item" style="width:100%;min-height:260px;padding:12px;border:1px solid var(--hair);border-radius:10px;font-family:var(--mono);font-size:12.5px"></textarea></div>'
+   +'<div style="padding:0 20px"><p class="sk" style="margin-bottom:6px">FAQ (JSON — optional): <input id="art_faq" placeholder=\'[{"q":"...","a":"..."}]\' style="width:70%;padding:8px;border:1px solid var(--hair);border-radius:8px;font-size:12px"></p></div>'
+   +'<button class="btn-save" onclick="artSave()">Publish artikel</button><span id="artmsg" style="font-size:12px;color:var(--green);padding-left:8px"></span></div></div>';
+}
+async function artEdit(slug){
+  var r=await fetch('/api/dash/site',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify({action:'art_get',slug:slug})});
+  var d=await r.json(); var a=d.article||{};
+  document.getElementById('art_title').value=a.title||''; document.getElementById('art_slug').value=a.slug||slug;
+  document.getElementById('art_meta').value=a.meta_desc||''; document.getElementById('art_body').value=a.body_md||'';
+  document.getElementById('art_faq').value=a.faq_json&&a.faq_json!=='[]'?a.faq_json:'';
+  document.getElementById('art_pub').value=String(a.published!=null?a.published:1);
+  document.getElementById('arted_title').textContent='Edit: '+slug;
+  document.getElementById('arteditor').scrollIntoView({behavior:'smooth'});
+}
+async function artSave(){
+  var b={action:'art_save',title:document.getElementById('art_title').value,slug:document.getElementById('art_slug').value,
+    meta_desc:document.getElementById('art_meta').value,body_md:document.getElementById('art_body').value,
+    faq_json:document.getElementById('art_faq').value||'[]',sub:document.getElementById('art_sub').value,
+    published:parseInt(document.getElementById('art_pub').value)||0};
+  var r=await fetch('/api/dash/site',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify(b)});
+  var d=await r.json(); document.getElementById('artmsg').textContent=d.ok?('Live: /articles/'+d.slug+' ✓'):'Gagal: '+(d.error||'');
+  if(d.ok) setTimeout(load,800);
+}
+async function artDel(slug){ if(!confirm('Hapus artikel '+slug+'?')) return;
+  await fetch('/api/dash/site',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify({action:'art_del',slug:slug})}); load(); }
+function renderMenu(el,d){
+  var menus=['header','footer_col1','footer_col2','footer_col3','footer_col4'];
+  var groups=menus.map(mn=>{
+    var items=(d.menus||[]).filter(x=>x.menu===mn);
+    var rows=items.map(x=>'<div class="stg"><div class="sk" style="flex:1">'+x.label+' <span style="color:var(--faint);font-size:11.5px">→ '+x.href+'</span></div><button class="ack" onclick="menuDelItem(\''+mn+'\','+x.id+')">Del</button></div>').join('');
+    return '<div style="border-bottom:1px solid var(--hair);padding:12px 20px 4px"><b style="font-size:13px;color:var(--ink)">'+mn+'</b></div>'+rows
+      +'<div class="stg"><input id="nm_'+mn+'_l" placeholder="Label" style="width:140px"><input id="nm_'+mn+'_h" placeholder="/path.html" style="width:200px;margin-left:8px"><button class="ack" onclick="menuAddItem(\''+mn+'\')">+ Tambah</button></div>';
+  }).join('');
+  el.innerHTML='<div class="panel"><div class="head"><h3>Menu Header & Footer</h3><span class="note">item di sini menggantikan menu statis di SEMUA halaman (live)</span></div><div class="body">'+groups+'</div></div>';
+}
+async function menuAddItem(mn){
+  var l=document.getElementById('nm_'+mn+'_l').value.trim(), h2=document.getElementById('nm_'+mn+'_h').value.trim();
+  if(!l||!h2) return alert('Label & href wajib');
+  await fetch('/api/dash/site',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify({action:'menu_save',menu:mn,items:[{label:l,href:h2}]})});
+  load();
+}
+async function menuDelItem(mn,id){
+  // hapus 1 item: ambil semua items menu itu dari data terakhir (sederhana: refetch + filter di server tidak ada — pakai trick: simpan ulang tanpa item itu)
+  var d=await (await fetch('/api/dash/site?range=7',{headers:{Authorization:'Bearer '+TOKEN}})).json();
+  var items=(d.menus||[]).filter(x=>x.menu===mn && x.id!==id).map(x=>({label:x.label,href:x.href}));
+  await fetch('/api/dash/site',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify({action:'menu_save',menu:mn,items:items})});
+  load();
+}
+
+</script></body></html>
