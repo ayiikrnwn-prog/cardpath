@@ -27,7 +27,7 @@ export default {
       return handleQuizSubmit(request, env);
     }
     if (path === '/api/track' && request.method === 'POST') {
-      return handleTrack(request, env);
+      return handleTrack(request, env, ctx);
     }
     if (path === '/api/email' && request.method === 'POST') {
       return handleEmail(request, env);
@@ -89,6 +89,12 @@ export default {
           r2.headers.delete('Content-Length');
           r2.headers.set('Cache-Control','no-store');
           applyLidCookie(r2.headers, url); // X1: first-touch cookie
+          // Meta Pixel + QuizStart + GTag (perf agent spec 30 Okt) — config inline, script di akhir body
+          const PIXEL_ID = env.CP_PIXEL_ID || '1467955421937228';
+          if (PIXEL_ID && !__h.includes('cp-pixel.js')) {
+            const cfg = '<script>window.CP_PIXEL={pixelId:\''+PIXEL_ID+'\',gtagId:\''+(env.CP_GTAG_ID||'')+'\',gtagLabel:\''+(env.CP_GTAG_LABEL||'')+'\'};</'+'script>';
+            __h = __h.replace('</body>', cfg + '<script src="/cp-pixel.js" defer></scr'+'ipt></body>');
+          }
           return r2;
         }
         const r2=new Response(assetResp.body, assetResp); r2.headers.set('Cache-Control','no-store'); return r2;
@@ -115,6 +121,11 @@ export default {
       let __html = await assetResp.text();
       if (!__html.includes('track.js')) __html = __html.replace('</head>', '<script src="/track.js" defer></script></head>');
       if (!__html.includes('cp-fwd.js')) __html = __html.replace('</head>', '<script src="/cp-fwd.js" defer></script></head>');
+      // X2/pixel: quiz SUB1 (card.*) dapat Meta Pixel + QuizStart + GTag
+      if (url.hostname.startsWith('card.') && env.CP_PIXEL_ID && !__html.includes('cp-pixel.js')) {
+        const cfg = '<script>window.CP_PIXEL={pixelId:\''+env.CP_PIXEL_ID+'\',gtagId:\''+(env.CP_GTAG_ID||'')+'\',gtagLabel:\''+(env.CP_GTAG_LABEL||'')+'\'};</'+'script>';
+        __html = __html.replace('</body>', cfg + '<script src="/cp-pixel.js" defer></scr'+'ipt></body>');
+      }
       const __r2 = new Response(__html, assetResp);
       __r2.headers.set('Content-Type','text/html; charset=utf-8');
       __r2.headers.delete('Content-Length');
@@ -406,6 +417,33 @@ async function trackSessionP(env, ev){
     await env.DB.prepare('UPDATE session_summary SET '+sets.join(', ')+' WHERE session_id=?').bind(...vals).run();
   }
 }
+async function fireCapi(env, ev, request){
+  // Blok 3 CAPI mirror — NOL PII: external_id = sha256(lid)
+  try{
+    const lid = ev.lid;
+    const data = new TextEncoder().encode(lid);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    const ext = [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
+    const payload = {
+      data: [{
+        event_name: 'QuizStart',
+        event_time: Math.floor(Date.now()/1000),
+        event_id: 'qs_'+lid,
+        action_source: 'website',
+        event_source_url: (request && new URL(request.url).origin + (ev.page||'')) || undefined,
+        user_data: { external_id: ext }
+      }],
+      access_token: env.META_CAPI_TOKEN,
+      test_event_code: env.META_CAPI_TEST || undefined
+    };
+    const r = await fetch('https://graph.facebook.com/v21.0/'+env.CP_PIXEL_ID+'/events', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+    });
+    const j = await r.json().catch(()=>({}));
+    console.log('capi:', r.status, JSON.stringify(j).slice(0,150));
+    return r.ok;
+  }catch(e){ return false; }
+}
 const VALID_EVENTS = new Set(['session_start','page_view','scroll_depth','heartbeat','session_end','quiz_start','quiz_complete','gate_completed','jump_click','sub2_landing','p1_view','p2_view','outbound_click','match_slide','click','view']);
 async function insertFunnelP(env, ev){
   if (!ev || !ev.lid || typeof ev.lid!=='string' || !VALID_EVENTS.has(ev.event)) return false; // reject sampah
@@ -425,6 +463,10 @@ async function handleTrack(request, env) {
     let okF=false;
     try { okF = await insertFunnelP(env, ev) !== false; } catch(e){ console.log('if err', String(e).slice(0,120)); }
     try { if (ev.session_id && (okF || ev.event==='quiz_funnel_client')) await trackSessionP(env, ev); } catch(e){ console.log('ts err', String(e).slice(0,120)); }
+    // Blok 3: CAPI mirror — quiz_start ke Meta Conversions API (dedup via event_id=lid)
+    if (okF && ev.event==='quiz_start' && ev.lid && env.CP_PIXEL_ID && env.META_CAPI_TOKEN) {
+      fireCapi(env, ev, request).catch(e=>console.log('capi err', String(e).slice(0,120))); // fire-and-forget
+    }
     if (okF) saved++; else rejected++;
   }
   return json({ok:true, saved, rejected});
