@@ -232,7 +232,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{ou
   </nav>
 </div><div class="sidefoot">Metrics HQ v2 · CardPath</div></div>
 
-<div id="shell"><div id="topbar2">  <div class="range"><button data-r="1">Today</button><button data-r="7" class="on">7d</button><button data-r="14">14d</button><button data-r="30">30d</button><button data-r="custom" id="btnCustom">Custom</button></div>
+<div id="shell"><div id="topbar2">  <span id="dataFresh" style="font-size:11px;color:var(--faint);font-family:var(--mono);margin-right:auto;display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;box-shadow:0 0 6px rgba(29,158,88,.5)"></span><span id="dataFreshTxt">data per: —</span></span>  <div class="range"><button data-r="1">Today</button><button data-r="7" class="on">7d</button><button data-r="14">14d</button><button data-r="30">30d</button><button data-r="custom" id="btnCustom">Custom</button></div>
 <div id="customBox" style="display:none;gap:6px;align-items:center;padding:4px 10px"><input type="date" id="cFrom" style="padding:4px 8px;border:1px solid var(--hair);border-radius:6px;font-size:12px"> <span style="font-size:12px;color:var(--mut)">→</span> <input type="date" id="cTo" style="padding:4px 8px;border:1px solid var(--hair);border-radius:6px;font-size:12px"> <button class="btn" style="padding:4px 10px;font-size:12px" onclick="applyCustom()">Apply</button></div>
 </div><div id="wrap">
   <div class="verdict" id="verdict"></div>
@@ -249,7 +249,10 @@ async function doLogin(){
   if(d.ok){TOKEN=d.token;sessionStorage.setItem('hq_jwt',TOKEN);boot()}
   else document.getElementById('loginerr').style.display='block';
 }
+function markFresh(){var t=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});var e=document.getElementById('dataFreshTxt');if(e)e.textContent='data per: '+t;}
 function boot(){document.getElementById('login').style.display='none';document.getElementById('app').style.display='block';load()}
+// auto-refresh tiap 1 jam (hanya saat tab terlihat — hemat & tidak mengganggu)
+setInterval(()=>{ if(document.visibilityState==='visible' && TOKEN){ P0CACHE=null; load(); } }, 3600*1000);
 document.querySelectorAll('#top nav a').forEach(a=>a.addEventListener('click',e=>{
   if(a.getAttribute('href') && a.getAttribute('href')!=='#'){ return; } // external link (Style Lab)
   e.preventDefault();curPanel=a.dataset.panel;
@@ -298,6 +301,7 @@ async function load(){
   renderVerdict(curPanel, curPanel==='p0'?d:P0CACHE||d);
   var P=document.getElementById('panels');
   ({p0:v0,p1:v1,p2:v2,p3:v3,p4:v4,p5:v5,p6:v6,settings:vS,ads:vA,site:vSite,leads:vL}[curPanel]||v0)(P,d);
+  markFresh();
   } finally { P.style.opacity='1'; delete P.dataset.busy; }
 }
 function renderVerdict(p,d){
