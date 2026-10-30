@@ -64,7 +64,7 @@ button{font-family:inherit;cursor:pointer}
 }
 
 /* ---------- VERDICT ROW (role-metric framework) ---------- */
-.verdict{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:14px;overflow:hidden;margin-bottom:28px}
+.verdict{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:14px;overflow:hidden;margin-bottom:28px}
 .vstat{background:#fff;padding:18px 20px}
 .vstat .lbl{font-size:11px;font-weight:500;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px;margin-bottom:6px}
 .vstat .val{font-size:26px;font-weight:500;color:var(--ink);font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-0.03em}
@@ -131,6 +131,7 @@ tr.drillable{cursor:pointer}
 .stg input:focus{outline:none;border-color:var(--accent)}
 .btn-save{margin:14px 20px;padding:9px 20px;background:var(--accent);color:#fff;border:0;border-radius:9px;font-size:13px;font-weight:500}
 @media(max-width:1000px){.verdict{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}#top nav{overflow-x:auto}}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style></head>
 <body>
 
@@ -217,12 +218,16 @@ function exportPanel(p){
 }
 var P0CACHE=null;
 async function load(){
+  var P=document.getElementById('panels');
+  if(P && !P.dataset.busy){ P.dataset.busy='1'; P.style.opacity='.45'; P.style.transition='opacity .15s'; }
+  try{
   if(curPanel==='p0'){ P0CACHE=null; }
   else if(!P0CACHE){ P0CACHE=await api('p0'); }
   var d=await api(curPanel); if(!d)return;
   renderVerdict(curPanel, curPanel==='p0'?d:P0CACHE||d);
   var P=document.getElementById('panels');
   ({p0:v0,p1:v1,p2:v2,p3:v3,p4:v4,p5:v5,p6:v6,settings:vS,ads:vA,site:vSite,leads:vL}[curPanel]||v0)(P,d);
+  } finally { P.style.opacity='1'; delete P.dataset.busy; }
 }
 function renderVerdict(p,d){
   var V=document.getElementById('verdict');
