@@ -150,7 +150,8 @@ tr.drillable{cursor:pointer}
     <a href="#" data-panel="site" data-title="Website Studio">Website</a>
     <a href="#" data-panel="settings" data-title="Settings">Settings</a>
   </nav>
-  <div class="range"><button data-r="7" class="on">7d</button><button data-r="14">14d</button><button data-r="30">30d</button></div>
+  <div class="range"><button data-r="1">Today</button><button data-r="7" class="on">7d</button><button data-r="14">14d</button><button data-r="30">30d</button><button data-r="custom" id="btnCustom">Custom</button></div>
+<div id="customBox" style="display:none;gap:6px;align-items:center;padding:4px 10px"><input type="date" id="cFrom" style="padding:4px 8px;border:1px solid var(--hair);border-radius:6px;font-size:12px"> <span style="font-size:12px;color:var(--mut)">→</span> <input type="date" id="cTo" style="padding:4px 8px;border:1px solid var(--hair);border-radius:6px;font-size:12px"> <button class="btn" style="padding:4px 10px;font-size:12px" onclick="applyCustom()">Apply</button></div>
 </div></div>
 
 <div id="wrap">
@@ -171,9 +172,22 @@ async function doLogin(){
 function boot(){document.getElementById('login').style.display='none';document.getElementById('app').style.display='block';load()}
 document.querySelectorAll('#top nav a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();curPanel=a.dataset.panel;
   document.querySelectorAll('#top nav a').forEach(x=>x.classList.remove('on'));a.classList.add('on');load()}));
-document.querySelectorAll('#top .range button').forEach(b=>b.addEventListener('click',()=>{RANGE=b.dataset.r;
+document.querySelectorAll('#top .range button').forEach(b=>b.addEventListener('click',()=>{
+  RANGE=b.dataset.r;
+  document.getElementById('customBox').style.display = (RANGE==='custom')?'flex':'none';
+  if(RANGE==='custom'){ document.querySelectorAll('#top .range button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); return; }
   document.querySelectorAll('#top .range button').forEach(x=>x.classList.remove('on'));b.classList.add('on');load()}));
-async function api(panel){var r=await fetch('/api/dash/'+panel+'?range='+RANGE,{headers:{Authorization:'Bearer '+TOKEN}});
+var CUST=null;
+async function applyCustom(){
+  var f=document.getElementById('cFrom').value, t=document.getElementById('cTo').value;
+  if(!f||!t) return;
+  var from=new Date(f+'T00:00:00Z').getTime(), to=new Date(t+'T23:59:59Z').getTime();
+  if(to<from){var tmp=from;from=to;to=tmp;}
+  CUST=[from,to]; RANGE='custom';
+  await load();
+}
+async function api(panel){var q='/api/dash/'+panel+'?range='+RANGE; if(CUST){q+='&from='+CUST[0]+'&to='+CUST[1];}
+  var r=await fetch(q,{headers:{Authorization:'Bearer '+TOKEN}});
   if(r.status===401){sessionStorage.removeItem('hq_jwt');location.reload();return null}return r.json()}
 function fmt(n,d){return n==null?'—':Number(n).toLocaleString('en-US',{maximumFractionDigits:d||0})}
 var CUR={currency:'USD', fx_rate:16000};
@@ -212,7 +226,8 @@ function renderVerdict(p,d){
   +'<div class="vstat"><div class="lbl">Spend '+chip('REAL','real')+'</div><div class="val">'+(spend?money(spend,d.currency):'—')+'</div><div class="sub">'+camps.length+' campaigns'+(CUR.currency==='IDR'?' · @Rp'+fmt(CUR.fx_rate)+'/USD':'')+'</div></div>'
   +'<div class="vstat"><div class="lbl">Sessions '+chip('REAL','real')+'</div><div class="val">'+fmt(S)+'</div><div class="sub">'+(S?avg(E,S)+'s avg engaged':'—')+'</div></div>'
   +'<div class="vstat"><div class="lbl">Quiz → Gate '+chip('REAL','real')+'</div><div class="val">'+fmt(Q)+' → '+fmt(G)+'</div><div class="sub">'+(S?pct(Q/S)+' completion':'—')+'</div></div>'
-  +'<div class="vstat"><div class="lbl">Outbound '+chip('REAL','real')+'</div><div class="val">'+fmt(O)+'</div><div class="sub">'+(S?pct(O/S)+' of sessions':'—')+'</div></div>';
+  +'<div class="vstat"><div class="lbl">Outbound '+chip('REAL','real')+'</div><div class="val">'+fmt(O)+'</div><div class="sub">'+(S?pct(O/S)+' of sessions':'—')+'</div></div>'
+  +'<div class="vstat"><div class="lbl">Leads captured '+chip('REAL','real')+'</div><div class="val">'+fmt(d.leads||0)+'</div><div class="sub">emails collected in range</div></div>';
 }
 function avg(a,b){return b?Math.round(a/b):0}
 function panel(title,note,inner){return '<div class="panel"><div class="head"><h3>'+title+'</h3><span class="note">'+note+'</span></div><div class="body">'+inner+'</div></div>'}
@@ -239,22 +254,25 @@ function v0(P,d){
   var body;
   if(!rows.length){body=emptyBox('No spend connected yet — Meta ingestion runs every 6h. Sessions appear automatically from tracking.')}
   else{
-    body='<table><thead><tr><th>Campaign</th><th>Platform</th><th>Trend</th><th class="r">Spend '+chip('REAL','real')+'</th><th class="r">Clicks</th><th class="r">Sessions</th><th class="r">Quiz ✓</th><th class="r">Gate ✓</th><th class="r">Jumps</th><th class="r">Outbound</th><th class="r">Engaged</th><th class="r">NET '+chip('DERIVED','derived')+'</th></tr></thead><tbody>';
+    body='<div style="overflow-x:auto"><table style="min-width:760px"><thead><tr><th>Campaign</th><th>Platform</th><th>Trend</th><th class="r">Spend '+chip('REAL','real')+'</th><th class="r">Clicks</th><th class="r">Sessions</th><th class="r">Quiz ✓</th><th class="r">Gate ✓</th><th class="r">Jumps</th><th class="r">Outbound</th><th class="r">Engaged</th><th class="r">NET '+chip('DERIVED','derived')+'</th></tr></thead><tbody>';
     rows.forEach(([k,v])=>{var s=v.s||{},rv=(d.derived||{})[k]||0,net=rv-(v.spend||0);
       v._net=net; v._spend=v.spend;
       body+='<tr class="drillable" onclick="drill(\''+k+'\')"><td class="strong">'+k+' <span class="dl">›</span></td><td>'+v.platform+'</td><td>'+spark(tr[k])+'</td><td class="r">'+money(v._spend,d.currency)+'</td><td class="r">'+fmt(v.clicks)+'</td><td class="r">'+fmt(s.sessions)+'</td><td class="r">'+fmt(s.qc)+'</td><td class="r">'+fmt(s.gc)+'</td><td class="r">'+fmt(s.j)+'</td><td class="r">'+fmt(s.outb)+'</td><td class="r">'+(s.sessions?avg(s.eng,s.sessions)+'s':'—')+'</td><td class="r '+(net<0?'neg':'pos')+'">'+money(net,d.currency)+'</td></tr>'});
-    body+='</tbody></table>';
+    body+='</tbody></table></div>';
   }
   P.innerHTML='<div class="panel">'+head+'<div class="body">'+body+'</div></div>';
 }
 async function drill(camp){
-  drillState=camp;
-  var r=await fetch('/api/dash/p0?range='+RANGE+'&level=content&campaign='+encodeURIComponent(camp),{headers:{Authorization:'Bearer '+TOKEN}});
+      drillState=camp;
+  var q='/api/dash/p0?level=content&campaign='+encodeURIComponent(camp);
+  if(CUST){q+='&from='+CUST[0]+'&to='+CUST[1];} else {q+='&range='+RANGE;}
+  var r=await fetch(q,{headers:{Authorization:'Bearer '+TOKEN}});
   var d=await r.json();
   var rows=(d.rows||[]).map(x=>{var net='';
     return '<tr><td class="strong">'+(x.content||'(none)')+'</td><td class="r">'+fmt(x.sessions)+'</td><td class="r">'+fmt(x.qc)+'</td><td class="r">'+fmt(x.j)+'</td><td class="r">'+fmt(x.outb)+'</td><td class="r">'+(x.sessions?avg(x.eng,x.sessions)+'s':'—')+'</td></tr>'}).join('');
-  document.getElementById('panels').innerHTML='<div class="panel"><div class="crumb"><a href="#" onclick="drillBack(event)">Campaigns</a> › <b>'+camp+'</b> — ad groups (utm_content)</div><div class="body>'+
-    (rows?'<table><thead><tr><th>Ad Group</th><th class="r">Sessions</th><th class="r">Quiz ✓</th><th class="r">Jumps</th><th class="r">Outbound</th><th class="r">Engaged</th></tr></thead><tbody>'+rows+'</tbody></table>':emptyBox('No sessions for this campaign yet.'))+'</div></div>';
+  var note=camp==='CARDPATH-META-METAA'?'<div class="note" style="padding:8px 14px">utm_content = penanda adset: as1/as2 = adset 1/2 (lihat setup Meta Ads). sas = sitelink/kontrol.</div>':'';
+  document.getElementById('panels').innerHTML='<div class="panel"><div class="crumb"><a href="#" onclick="drillBack(event)">← Campaigns</a> › <b>'+camp+'</b> — breakdown per ad group (utm_content)</div>'+note+'<div class="body">'+
+    (rows?'<div style="overflow-x:auto"><table style="min-width:640px"><thead><tr><th>Ad Group (utm_content)</th><th class="r">Sessions</th><th class="r">Quiz ✓</th><th class="r">Jumps</th><th class="r">Outbound</th><th class="r">Engaged</th></tr></thead><tbody>'+rows+'</tbody></table></div>':emptyBox('No sessions for this campaign yet.'))+'</div></div>';
 }
 function drillBack(e){e.preventDefault();drillState=null;load()}
 function v0Drill(P,d){drillState=null;v0(P,d)}
@@ -311,8 +329,8 @@ function v4(P,d){
   var rows=(d.matrix||[]).slice(0,25).map(x=>{var kv={};try{kv=JSON.parse(x.kv_json||'{}')}catch(e){}
     var combo=Object.entries(kv).map(e=>e[0]+'='+e[1]).join(' · ')||'(no targeting)';
     var fill=x.impr?x.rendered/x.impr:0;
-    return '<tr><td class="strong" style="font-size:12px">'+combo+'</td><td class="r">'+fmt(x.impr)+'</td><td class="r">'+fmt(x.rendered)+'</td><td class="r">'+pct(fill)+'</td><td class="r">'+(x.premium?Math.round(x.premium/x.impr*100)+'%':'—')+'</td><td class="r">'+(x.eCPM!=null?usd(x.eCPM):'<span style="color:var(--faint)">pending</span>')+'</td></tr>'}).join('');
-  P.innerHTML='<div class="panel"><div class="head"><h3>Audience Value</h3><div style="display:flex;gap:8px;align-items:center"><span class="note">'+chip('REAL','real')+' · eCPM '+chip('DERIVED','derived')+' ('+fmt(d.adsenseDays||0)+' AdSense days)</span><button class="export" onclick="exportPanel(\'p4\')">Export CSV</button></div></div><div class="body>'+(rows?'<table><thead><tr><th>Targeting combo</th><th class="r">Impr</th><th class="r">Rendered</th><th class="r">Fill</th><th class="r">Premium win</th><th class="r">eCPM</th></tr></thead><tbody>'+rows+'</tbody></table>':emptyBox('No impressions logged yet.'))+'</div></div>';
+    return '<tr><td class="strong" style="font-size:12px">'+combo+'</td><td class="r">'+fmt(x.impr)+'</td><td class="r">'+fmt(x.rendered)+'</td><td class="r">'+pct(fill)+'</td><td class="r">'+(x.premium?Math.round(x.premium/x.impr*100)+'%':'—')+'</td><td class="r">'+(x.eCPM!=null?money(x.eCPM,null):'<span style="color:var(--faint)">menunggu AdSense</span>')+'</td></tr>'}).join('');
+  P.innerHTML='<div class="panel"><div class="head"><h3>Audience Value</h3><div style="display:flex;gap:8px;align-items:center"><span class="note">'+chip('REAL','real')+' · eCPM '+chip('DERIVED','derived')+' — aktif setelah AdSense ('+fmt(d.adsenseDays||0)+' hari data)</span><button class="export" onclick="exportPanel(\'p4\')">Export CSV</button></div></div><div class="body">'+(rows?'<div style="overflow-x:auto"><table style="min-width:680px"><thead><tr><th>Profil pengunjung (sinyal yang dijual)</th><th class="r">Impr</th><th class="r">Rendered</th><th class="r">Fill</th><th class="r">Premium win</th><th class="r">eCPM</th></tr></thead><tbody>'+rows+'</tbody></table></div>':emptyBox('No impressions logged yet.'))+'</div></div>';
 }
 function v5(P,d){
   var q='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hair);margin-bottom:4px">'
@@ -335,7 +353,7 @@ function v5(P,d){
 function v6(P,d){
   var rows=(d.pages||[]).slice(0,30).map(x=>'<tr><td class="strong" style="font-size:12.5px">'+x.page+'</td><td class="r">'+fmt(x.pageviews)+'</td></tr>').join('');
   var q=(d.quality||[]).filter(x=>(x.sessions||0)>0).slice(0,30).map(x=>'<tr><td class="strong" style="font-size:12.5px">'+x.page+'</td><td class="r">'+fmt(x.sessions)+'</td><td class="r">'+(x.sessions?avg(x.eng,x.sessions)+'s':'—')+'</td><td class="r">'+(x.sessions?Math.round(x.scr/x.sessions)+'%':'—')+'</td></tr>').join('');
-  P.innerHTML='<div class="panel"><div class="head"><h3>Content Performance</h3><div style="display:flex;gap:8px;align-items:center"><span class="note">'+chip('REAL','real')+' money pages · revenue share pending AdSense API</span><button class="export" onclick="exportPanel(\'p6\')">Export CSV</button></div></div><div class="body>'+(q?'<table><thead><tr><th>Page</th><th class="r">Pageviews</th><th class="r">Avg engaged</th><th class="r">Avg scroll</th></tr></thead><tbody>'+q+'</tbody></table>':emptyBox('No page views in this range.'))+'</div></div>';
+  P.innerHTML='<div class="panel"><div class="head"><h3>Content Performance</h3><div style="display:flex;gap:8px;align-items:center"><span class="note">'+chip('REAL','real')+' money pages · revenue share pending AdSense API</span><button class="export" onclick="exportPanel(\'p6\')">Export CSV</button></div></div><div class="body">'+(q?'<div style="overflow-x:auto"><table style="min-width:560px"><thead><tr><th>Halaman</th><th class="r">Sessions</th><th class="r">Avg engaged</th><th class="r">Avg scroll</th></tr></thead><tbody>'+q+'</tbody></table></div>':emptyBox('Belum ada kunjungan money pages di rentang ini.'))+'</div></div>';
 }
 async function ack(id){await fetch('/api/dash/ack',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify({alertId:id})});load()}
 async function vA(P){

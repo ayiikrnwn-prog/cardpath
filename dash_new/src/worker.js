@@ -84,7 +84,10 @@ async function handleDash(request, env, path, url){
   if(!await dashVerify(request, env)) return json({ok:false,error:'unauthorized'},401);
   const panel=path.replace('/api/dash/','');
   const p=new URLSearchParams(url.search);
-  const range=parseInt(p.get('range')||'7',10); const since=Date.now()-range*86400000;
+  let since; let range;
+  const pFrom=p.get('from'), pTo=p.get('to');
+  if(pFrom && pTo){ range=7; since=parseInt(pFrom,10)||Date.now()-7*86400000; }
+  else { range=parseInt(p.get('range')||'7',10)||7; since=Date.now()-range*86400000; }
   const src=p.get('source')||''; const dev=p.get('device')||'';
   const pf=[]; let srcF='', devF='';
   if(src){srcF=' AND utm_source=?'; pf.push(src);}
@@ -129,9 +132,15 @@ async function handleDash(request, env, path, url){
           impr.forEach(x=>{derived[x.camp]=totalRev*(x.c/tot)});
         }
       }catch(e){}
+      // leads captured (email optin) — REAL
+      let leads=0;
+      try{
+        const l=await q(env,`SELECT COUNT(*) c FROM leads WHERE ts>=?`,since);
+        leads=(l[0]&&l[0].c)||0;
+      }catch(e){}
       // daily trend per top campaign (sparkline source)
       const trend=await q(env,`SELECT date(started_ts/1000,'unixepoch') day, utm_campaign camp, COUNT(*) sessions, SUM(outbound) outb FROM session_summary WHERE started_ts>=? GROUP BY day, utm_campaign ORDER BY day`,since);
-      return csv?asCsv([...spend.map(s=>({type:'spend',...s})),...sess.map(s=>({type:'session',...s}))]):json({ok:true, panel, spend, sessions:sess, trend, derived, currency:cur, range});
+      return csv?asCsv([...spend.map(s=>({type:'spend',...s})),...sess.map(s=>({type:'session',...s}))]):json({ok:true, panel, spend, sessions:sess, trend, derived, leads, currency:cur, range});
     }
     if(panel==='p1'){ // cohort matrix + fit/intent histogram
       const camp=p.get('campaign')||''; const campF=camp?' AND utm_campaign=?':'';
