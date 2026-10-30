@@ -153,11 +153,12 @@ input::placeholder{color:var(--faint)}
 .funnel-row .nm{font-size:13px;color:var(--body);font-weight:600}
 .funnel-row .num{font-variant-numeric:tabular-nums;font-size:14px;font-weight:600;color:var(--ink)}
 .funnel-row .rate{font-size:11.5px;color:var(--faint);font-family:var(--mono);margin-left:8px}
-.bar{height:14px;background:#f0f0f3;border-radius:7px;overflow:hidden;position:relative}
-.bar i{display:block;height:100%;background:linear-gradient(90deg,#0a84ff,#5e5ce6);border-radius:7px;min-width:8px;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.bar{height:18px;background:#f5f5f7;border-radius:9px;border:1px solid var(--hair2);overflow:hidden;position:relative;box-shadow:inset 0 1px 2px rgba(0,0,0,.03)}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#0a84ff,#5e5ce6);border-radius:9px 3px 3px 9px;min-width:14px;transition:width .6s cubic-bezier(.2,.8,.2,1)}
 .bar i.bad{background:linear-gradient(90deg,#ff6b6b,#e0315b)}
 .bar i.dim{background:linear-gradient(90deg,#a8b3c4,#8a94a8);opacity:.55}
-.bar i.zero{background:#e8e8ed;min-width:14px}
+.bar i.zero{background:repeating-linear-gradient(-45deg,#eceff3 0 6px,#e4e8ee 6px 12px);min-width:20px}
+.bar b{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10.5px;font-weight:600;color:var(--mut);font-family:var(--mono);letter-spacing:.03em}
 .dr{font-size:11px;color:var(--faint);font-family:var(--mono);margin-left:6px}
 .dr.bad{color:var(--red);font-weight:600;background:var(--red-soft);padding:1px 7px;border-radius:999px}
 .dr.good{color:var(--green);font-weight:600;background:var(--green-soft);padding:1px 7px;border-radius:999px}
@@ -395,7 +396,7 @@ function v2(P,d){
     var cls=(v===0)?'zero':(drop>40?'bad':(i<2?'dim':''));
     var badge=drop!=null?(drop>40?'<span class="dr bad">−'+drop+'%</span>':(drop>0?'<span class="dr">−'+drop+'%</span>':(drop<0?'<span class="dr good">+'+(-drop)+'%</span>':''))):'';
     prev=v;
-    return '<div class="funnel-row"><div class="top"><span class="nm">'+s[1]+' '+(drop!=null?badge:'')+'</span><span><span class="num">'+fmt(v)+'</span><span class="rate">'+rate+'% dari awal</span></span></div><div class="bar"><i class="'+cls+'" style="width:'+w+'%"></i></div></div>';
+    return '<div class="funnel-row"><div class="top"><span class="nm">'+s[1]+' '+(drop!=null?badge:'')+'</span><span><span class="num">'+fmt(v)+'</span><span class="rate">'+rate+'% dari awal</span></span></div><div class="bar"><i class="'+cls+'" style="width:'+w+'%"></i><b>'+rate+'%</b></div></div>';
   }).join('');
   if(!(f||[]).length) inner=emptyBox('No events in this range yet.');
   P.innerHTML='<div class="panel"><div class="head"><h3>Conversion Funnel</h3><div style="display:flex;gap:8px;align-items:center"><span class="note">'+chip('REAL','real')+' first-party · red = drop-off >40%</span><button class="export" onclick="exportPanel(\'p2\')">Export CSV</button></div></div><div class="body>'+inner+'</div></div>';
