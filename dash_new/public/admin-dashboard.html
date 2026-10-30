@@ -146,6 +146,7 @@ tr.drillable{cursor:pointer}
     <a href="#" data-panel="p4" data-title="Audience Value">Value</a>
     <a href="#" data-panel="p5" data-title="Quality">Quality</a>
     <a href="#" data-panel="p6" data-title="Content">Content</a>
+    <a href="#" data-panel="leads" data-title="Leads">Leads</a>
     <a href="#" data-panel="ads" data-title="Ad Slots">Ad Slots</a>
     <a href="#" data-panel="site" data-title="Website Studio">Website</a>
     <a href="#" data-panel="settings" data-title="Settings">Settings</a>
@@ -212,7 +213,7 @@ async function load(){
   var d=await api(curPanel); if(!d)return;
   renderVerdict(curPanel, curPanel==='p0'?d:P0CACHE||d);
   var P=document.getElementById('panels');
-  ({p0:v0,p1:v1,p2:v2,p3:v3,p4:v4,p5:v5,p6:v6,settings:vS,ads:vA,site:vSite}[curPanel]||v0)(P,d);
+  ({p0:v0,p1:v1,p2:v2,p3:v3,p4:v4,p5:v5,p6:v6,settings:vS,ads:vA,site:vSite,leads:vL}[curPanel]||v0)(P,d);
 }
 function renderVerdict(p,d){
   var V=document.getElementById('verdict');
@@ -349,6 +350,30 @@ function v5(P,d){
   P.innerHTML=panel('Traffic Quality',chip('REAL','real')+' bot scoring server-side',q)
    +'<div class="panel"><div class="head"><h3>Fraud Signals</h3><span class="note">review manually — bukan auto-ban</span></div><div class="body">'+fraud+'</div></div>'
    +'<div class="panel"><div class="head"><h3>Alerts</h3><span class="note">spend · no-fill · bots · data gaps</span></div><div class="body">'+al+'</div></div>';
+}
+function vL(P,d){
+  var rows=(d.leads||[]);
+  var q='';
+  var body;
+  if(!rows.length){ body=emptyBox('Belum ada lead di rentang ini.'); }
+  else{
+    var trs=rows.filter(x=>{ if(!q) return true; var s=(x.email+' '+(x.lid||'')+' '+(x.camp||'')).toLowerCase(); return s.indexOf(q)>=0; }).map(x=>{
+      var t=x.ts?new Date(x.ts).toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'—';
+      var camp=x.camp||x.source||'—';
+      var dev=x.device||'—';
+      return '<tr><td class="strong" style="font-size:12.5px">'+(x.email||'—')+'</td><td style="font-size:12px;color:var(--mut)">'+(x.lid||'—')+'</td><td>'+camp+'</td><td>'+dev+'</td><td class="r" style="font-size:12px">'+t+'</td></tr>';
+    }).join('');
+    body='<div style="display:flex;gap:8px;margin-bottom:10px;align-items:center"><input id="leadQ" placeholder="Cari email / lid / campaign…" oninput="leadFilter()" style="flex:1;max-width:320px;padding:7px 10px;border:1px solid var(--hair);border-radius:8px;font-size:13px"><span class="note">'+rows.length+' leads · '+fmt(d.total||rows.length)+' total in range</span></div>'
+      +'<div style="overflow-x:auto"><table style="min-width:680px" id="leadTable"><thead><tr><th>Email</th><th>LID</th><th>Campaign</th><th>Device</th><th class="r">Waktu (WIB-ish)</th></tr></thead><tbody>'+trs+'</tbody></table></div>';
+  }
+  P.innerHTML='<div class="panel"><div class="head"><h3>Leads — Email Captured</h3><div style="display:flex;gap:8px;align-items:center"><span class="note">'+chip('REAL','real')+' · zero-party data (email gate)</span><button class="export" onclick="exportPanel(\'leads\')">Export CSV</button></div></div><div class="body">'+body+'</div></div>';
+}
+function leadFilter(){
+  var q=(document.getElementById('leadQ').value||'').toLowerCase();
+  var tb=document.getElementById('leadTable'); if(!tb) return;
+  tb.querySelectorAll('tbody tr').forEach(tr=>{
+    tr.style.display = tr.textContent.toLowerCase().indexOf(q)>=0 ? '' : 'none';
+  });
 }
 function v6(P,d){
   var rows=(d.pages||[]).slice(0,30).map(x=>'<tr><td class="strong" style="font-size:12.5px">'+x.page+'</td><td class="r">'+fmt(x.pageviews)+'</td></tr>').join('');

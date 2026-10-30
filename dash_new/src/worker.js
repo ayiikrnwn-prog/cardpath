@@ -327,6 +327,13 @@ async function handleDash(request, env, path, url){
       const arts=await q(env,'SELECT slug,title,meta_desc,sub,updated_ts,published FROM articles ORDER BY updated_ts DESC LIMIT 100');
       return json({ok:true, panel:'site', injections:inj, menus, articles:arts});
     }
+    if(panel==='leads'){
+      const rows=await q(env,`SELECT l.ts, l.email, l.lid, l.source, l.meta_json, s.utm_campaign camp, s.device, s.country, s.started_ts
+        FROM leads l LEFT JOIN session_summary s ON l.lid=s.lid
+        WHERE l.ts>=? ORDER BY l.ts DESC LIMIT 200`,since);
+      const total=await q(env,`SELECT COUNT(*) c FROM leads WHERE ts>=?`,since);
+      return csv?asCsv(rows):json({ok:true, panel, leads:rows, total:(total[0]&&total[0].c)||0, range});
+    }
     if(panel==='ingest_now'){
       const r1=await ingestMetaSpend(env);
       await env.DB.prepare("INSERT INTO settings (key,value) VALUES ('last_ingest_ts',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(String(Date.now())).run();
