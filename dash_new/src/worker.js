@@ -318,6 +318,11 @@ async function handleDash(request, env, path, url){
       const arts=await q(env,'SELECT slug,title,meta_desc,sub,updated_ts,published FROM articles ORDER BY updated_ts DESC LIMIT 100');
       return json({ok:true, panel:'site', injections:inj, menus, articles:arts});
     }
+    if(panel==='ingest_now'){
+      const r1=await ingestMetaSpend(env);
+      await env.DB.prepare("INSERT INTO settings (key,value) VALUES ('last_ingest_ts',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(String(Date.now())).run();
+      return json({ok:true, result:r1});
+    }
     if(panel==='settings'){
       if(request.method==='POST'){
         const b=await request.json().catch(()=>({}));
@@ -355,8 +360,9 @@ async function handleDashAck(request, env){
 async function ingestMetaSpend(env){
   const tok = env.META_ACCESS_TOKEN; if(!tok) return {skipped:'no token'};
   const acct = env.META_AD_ACCOUNT || 'act_1559699858691374';
-  const url = `https://graph.facebook.com/v21.0/${acct}/insights?level=campaign&fields=spend,clicks,impressions,campaign_name&date_preset=yesterday&access_token=${tok}`;
+  const url = `https://graph.facebook.com/v21.0/${acct}/insights?level=campaign&fields=campaign_id,spend,clicks,impressions,campaign_name&date_preset=today&access_token=${tok}`;
   const r = await fetch(url); const d = await r.json();
+  if(env.INGEST_DEBUG) { try{ await env.DB.prepare("INSERT INTO settings (key,value) VALUES ('ingest_debug',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(JSON.stringify(d).slice(0,500)).run(); }catch(e){} }
   if(!d.data){
     let errs=0;
     try{ await env.DB.prepare("INSERT INTO settings (key,value) VALUES ('ingestion_errors','1') ON CONFLICT(key) DO UPDATE SET value=CAST(CAST(value AS INTEGER)+1 AS TEXT)").run();
@@ -373,20 +379,38 @@ async function ingestMetaSpend(env){
   // pause check
   let paused=false; try{ const p=await env.DB.prepare("SELECT value FROM settings WHERE key='ingestion_paused'").first(); paused=p&&JSON.parse(p.value)===true; }catch(e){}
   if(paused) return {skipped:'paused'};
+  // deteksi currency akun Meta (cache 24 jam di settings)
+  let acctCur='USD'; let fx=16000;
+  try{
+    const cr=await env.DB.prepare("SELECT value FROM settings WHERE key='meta_acct_currency'").first();
+    let cur;
+    if(cr && (Date.now()-parseInt((cr.value||'0').split('|')[0]||'0'))<86400000){
+      cur=(cr.value||'').split('|')[1]||'USD';
+    } else {
+      try{ const ar=await (await fetch(`https://graph.facebook.com/v21.0/${acct}?fields=currency&access_token=${tok}`)).json(); cur=ar.currency||'USD'; }
+      catch(e){ cur=cr?(cr.value||'').split('|')[1]||'USD':'USD'; }
+      await env.DB.prepare("INSERT INTO settings (key,value) VALUES ('meta_acct_currency',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(Date.now()+'|'+cur).run();
+    }
+    acctCur=cur||'USD';
+  }catch(e){}
+  try{ const f=await env.DB.prepare("SELECT value FROM settings WHERE key='fx_rate'").first(); if(f) fx=parseFloat(JSON.parse(f.value))||16000; }catch(e){}
   let n=0;
   for(const row of d.data){
     const cid = row.campaign_id || row.id; if(!cid) continue;
     // map ke utm via platform_campaign_map (atau fallback nama campaign)
     let map=null; try{ map = (await env.DB.prepare('SELECT utm_source, utm_campaign FROM platform_campaign_map WHERE campaign_id=?').bind(cid).first()) || null; }catch(e){}
-    const spend=parseFloat(row.spend||'0'); if(!(spend>=0)) continue; // validasi
+    const spendRaw=parseFloat(row.spend||'0'); if(!(spendRaw>=0)) continue; // validasi
+    const spend = spendRaw; // native currency
     const clicks=parseInt(row.clicks||'0',10)||0, impr=parseInt(row.impressions||'0',10)||0;
-    const day=new Date(Date.now()-86400000).toISOString().slice(0,10);
+    const day=new Date().toISOString().slice(0,10);
+    // konversi native→USD (Meta IDR billing: spend/fx)
+    const spendUsd = acctCur==='IDR' ? spendRaw/fx : spendRaw;
     // idempotent + guard: jangan overwrite existing>0 dengan 0/partial
     let ex=null; try{ ex=await env.DB.prepare("SELECT spend_usd FROM spend_events WHERE platform='meta' AND campaign_id=? AND date(ts/1000,'unixepoch')=?").bind(cid,day).first(); }catch(e){}
     if(ex && ex.spend_usd>0 && spend===0){ continue; }
     await env.DB.prepare('DELETE FROM spend_events WHERE platform=? AND campaign_id=? AND date(ts/1000,\'unixepoch\')=?').bind('meta',cid,day).run();
     await env.DB.prepare('INSERT INTO spend_events (ts,platform,campaign_id,campaign_name,utm_source,utm_campaign,spend_usd,clicks,impressions) VALUES (?,?,?,?,?,?,?,?,?)')
-      .bind(Date.parse(day+'T00:00:00Z'),'meta',cid,row.campaign_name||cid,(map&&map.utm_source)||'metaa',(map&&map.utm_campaign)||row.campaign_name||cid,spend,clicks,impr).run();
+      .bind(Date.parse(day+'T00:00:00Z'),'meta',cid,row.campaign_name||cid,(map&&map.utm_source)||'metaa',(map&&map.utm_campaign)||row.campaign_name||cid,spendUsd,clicks,impr).run();
     n++;
   }
   return {inserted:n};
@@ -430,6 +454,13 @@ export default {
     const path = url.pathname;
     if (path === '/health') return json({ok:true, service:'metrics-hq'});
     if (path === '/admin/login' && request.method === 'POST') return handleDashLogin(request, env);
+    if (path === '/api/dash/ingest_key') {
+      const want=(env.INGEST_KEY||'').trim(); const got=(new URL(request.url).searchParams.get('key')||'').trim();
+      if(!want || got!==want) return json({ok:false,error:'bad_key'},403);
+      const r1=await ingestMetaSpend(env);
+      await env.DB.prepare("INSERT INTO settings (key,value) VALUES ('last_ingest_ts',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(String(Date.now())).run();
+      return json({ok:true, result:r1});
+    }
     if (path.startsWith('/api/dash/') && (request.method === 'GET' || request.method === 'POST')) return handleDash(request, env, path, url);
     if (path === '/api/dash/ack' && request.method === 'POST') return handleDashAck(request, env);
     if (path === '/api/dash/settings' && request.method === 'POST') return handleDashSettings(request, env);

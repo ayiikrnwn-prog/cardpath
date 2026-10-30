@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deposit Matcher — CardPath</title>
+<meta name="description" content="How much should your secured card deposit be? Match a deposit to your budget and see the credit-line impact.">
+<link rel="stylesheet" href="/sub1/style.css">
+</head>
+<body>
+<div class="disclosure">Editorial content only. We may earn a commission from partners.</div>
+<header class="topbar">
+  <div class="logo">Card<span class="dot">Path</span></div>
+  <nav><a data-fwd href="../../index.html">Home</a><a data-fwd href="../../quiz.html" class="nav-cta">Find My Card</a></nav>
+</header>
+<main class="wrap">
+  <section class="hero" style="padding-bottom:6px">
+    <div class="eyebrow">Calculator</div>
+    <h1 style="font-size:clamp(26px,4vw,36px)">How much should you deposit?</h1>
+    <p class="sub">Your deposit is your credit line — and it comes back at graduation. Find the size that fits.</p>
+  </section>
+  <section>
+    <div class="quiz-shell" style="max-width:720px">
+      <form id="dm-form">
+        <div class="quiz-opts" style="gap:16px">
+          <div><label for="dm-budget" style="display:block;font-size:13px;color:var(--ink-3);margin-bottom:6px">ONE-TIME AMOUNT YOU'RE COMFORTABLE SETTING ASIDE ($)</label>
+          <input id="dm-budget" type="number" min="0" max="5000" value="200" inputmode="numeric"
+            style="width:100%;padding:13px 14px;font-size:16px;border:1.5px solid var(--hairline);border-radius:10px"></div>
+          <div><label for="dm-spend" style="display:block;font-size:13px;color:var(--ink-3);margin-bottom:6px">TYPICAL MONTHLY CARD SPENDING ($)</label>
+          <input id="dm-spend" type="number" min="0" max="5000" value="150" inputmode="numeric"
+            style="width:100%;padding:13px 14px;font-size:16px;border:1.5px solid var(--hairline);border-radius:10px"></div>
+          <button class="cta full" type="submit">Match My Deposit →</button>
+        </div>
+      </form>
+      <div id="dm-out" style="display:none;margin-top:22px"></div>
+      <p class="disclaimer-sm">Educational estimate only. Deposit rules vary by issuer; a deposit is refundable collateral, not a fee.</p>
+    </div>
+  </section>
+</main>
+<footer><div class="wrap"><p class="fine">© 2026 CardPath.</p></div></footer>
+<script src="/sub1/app.js?v=452"></script>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const f=document.getElementById('dm-form'); if(!f) return;
+  f.addEventListener('submit',e=>{
+    e.preventDefault();
+    const budget=+document.getElementById('dm-budget').value||0;
+    const spend=+document.getElementById('dm-spend').value||0;
+    // ideal deposit: spend/0.1 (utilization <10% comfortable) — capped by budget
+    const idealUtil=Math.ceil(spend/0.10/50)*50;
+    const recommended=Math.max(200, Math.min(idealUtil, budget||200));
+    const utilAt=spend>0? Math.round(spend/recommended*100):0;
+    const verdict = budget<=0 ? ['low','No deposit budget']
+      : budget>=recommended ? ['high','$'+recommended+' — comfortable fit']
+      : ['med','$'+budget+' — workable'];
+    const [cls,label]=verdict;
+    const bandCls=cls==='high'?'odds-high':cls==='med'?'odds-med':'odds-low';
+    document.getElementById('dm-out').innerHTML=
+      '<div class="verdict"><div class="match">Suggested deposit</div>'+
+      '<div class="cardname">$'+ (budget||0) +'</div>'+
+      '<span class="odds-band '+bandCls+'">'+label+'</span>'+
+      '<p class="why">At $'+spend+'/month spending on a $'+ (budget||0) +' line, your utilization is about <strong class="num">'+utilAt+'%</strong>. '+
+      (utilAt>30?'That is above the 30% comfort zone — paying before the statement date keeps the reported balance low.':'That is a healthy utilization zone for score building.')+
+      ' Remember: a deposit is your limit, not a fee — it comes back at graduation.</p>'+
+      '<a class="cta" data-fwd href="../../quiz.html">Take the Full Quiz →</a></div>';
+    document.getElementById('dm-out').style.display='block';
+    sessionStorage.setItem('cp_calc_used','1');
+    track('calculator_use',{calc:'deposit_matcher',budget,spend,score_bump:10});
+  });
+});
+</script>
+</body></html>

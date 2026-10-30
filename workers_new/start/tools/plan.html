@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Month-by-Month Plan Generator — CardPath</title>
+<meta name="description" content="Your personal credit-building timeline: what to do each month, based on your card match and deposit. Free, printable.">
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="disclosure">Editorial content only. We may earn a commission from partners. Educational content — not financial advice.</div>
+<header class="topbar">
+  <div class="logo">Card<span class="dot">Path</span></div>
+  <nav><a data-fwd href="../../index.html">Home</a><a data-fwd href="../../quiz.html">Quiz</a><a data-fwd href="../../quiz.html" class="nav-cta">Find My Card</a></nav>
+</header>
+
+<main class="wrap">
+  <section class="hero" style="padding-bottom:6px">
+    <div class="eyebrow">Tool — USP #3</div>
+    <h1 style="font-size:clamp(26px,4vw,36px);font-weight:450">Your month-by-month plan.</h1>
+    <p class="sub">Based on your card match and deposit — the same milestones issuers and FICO actually use.</p>
+  </section>
+
+  <section>
+    <div class="quiz-shell" style="max-width:720px">
+      <form id="plan-form">
+        <div class="quiz-opts" style="gap:14px">
+          <div><label style="display:block;font-size:13px;color:var(--ink-3);margin-bottom:6px">YOUR CARD MATCH (from quiz)</label>
+          <input id="pl-card" type="text" placeholder="e.g., Capital One Platinum Secured" style="width:100%;padding:13px 14px;font-size:16px;border:1.5px solid var(--hairline);border-radius:10px"></div>
+          <div><label style="display:block;font-size:13px;color:var(--ink-3);margin-bottom:6px">DEPOSIT / STARTING LIMIT ($)</label>
+          <input id="pl-dep" type="number" min="0" value="200" inputmode="numeric" style="width:100%;padding:13px 14px;font-size:16px;border:1.5px solid var(--hairline);border-radius:10px"></div>
+          <div><label style="display:block;font-size:13px;color:var(--ink-3);margin-bottom:6px">AUTOPAY SET UP?</label>
+          <select id="pl-autopay" style="width:100%;padding:13px 14px;font-size:16px;border:1.5px solid var(--hairline);border-radius:10px">
+            <option value="1">Yes — already on</option><option value="0">Not yet</option></select></div>
+          <button class="cta full" type="submit">Generate My Plan →</button>
+        </div>
+      </form>
+      <div id="plan-out" style="display:none;margin-top:26px"></div>
+      <p class="disclaimer-sm">Educational estimate based on public issuer &amp; FICO criteria (first FICO score needs an account ≥6 months old, reported ≤6 months). Not financial advice.</p>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap"><p class="fine">© 2026 CardPath.</p></div></footer>
+<script src="../../app.js"></script><script src="../../kv.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  // prefill dari quiz
+  const prof=JSON.parse(sessionStorage.getItem('cp_profile')||'{}');
+  if(prof.cq_match && window.CARDS===undefined){} // CARDS ada di app.js scope
+  const cardName={chime:'Chime Credit Builder',capone49:'Capital One Platinum Secured',quicksilver:'CapOne Quicksilver Secured',opensky:'OpenSky Secured',openskynb:'OpenSky (no bank account)',creditone:'Credit One Platinum',indigo:'Indigo Mastercard',varo:'Varo Believe',zolve:'Zolve Classic',self:'Self Credit Builder',creditstrong:'Credit Strong',kikoff:'Kikoff',grow:'Grow Credit',petal2:'Petal 2'}[prof.cq_match];
+  if(cardName) document.getElementById('pl-card').value=cardName;
+  if(prof.cq_dep) document.getElementById('pl-dep').value=prof.cq_dep;
+
+  document.getElementById('plan-form').addEventListener('submit',e=>{
+    e.preventDefault();
+    const card=document.getElementById('pl-card').value||'Your card';
+    const dep=+document.getElementById('pl-dep').value||200;
+    const autopay=document.getElementById('pl-autopay').value==='1';
+    const util30=Math.ceil(dep*0.30), util10=Math.ceil(dep*0.10);
+    const auto=autopay?'Autopay is on — payment history (35% of your score) runs itself.':'<strong>Action: turn on autopay today</strong> — payment history is 35% of your score and the easiest win.';
+    const months=[
+      ['Month 1','Open the account, set autopay, make one small purchase. '+auto+' Utilization target: keep the reported balance under <span class="num">$'+util30+'</span> (30% of $'+dep+').'],
+      ['Months 1–5','The streak. Keep reported balance under <span class="num">$'+util30+'</span> every month — pay before the statement date if you spend more. Every on-time month is reported to all 3 bureaus.'],
+      ['Month 6','<strong>First FICO score may appear</strong> (requires an account ≥6 months old, reported ≤6 months). Pull your free reports at AnnualCreditReport.com and verify all 3 bureaus show the account.'],
+      ['Months 6–7','<strong>Graduation watch.</strong> Capital One reviews automatically at month 6; OpenSky accepts upgrade requests around month 6; Discover paused. Check readiness on the <a href="graduation.html">Graduation Checker</a>.'],
+      ['Months 7–12','Utilization target drops to <span class="num">$'+util10+'</span> (10%) for faster gains. Do NOT apply for new cards — each application dings slightly and slows the age of your file.'],
+      ['Month 12+','Credit mix: if you only have a card, a credit-builder <a href="../../self-secured-visa.html">loan</a> adds the installment category (10% of score). Rewards optimization comes after the foundation.'],
+    ];
+    document.getElementById('plan-out').innerHTML=
+      '<div class="verdict"><div class="match">Your plan · '+card+'</div>' +
+      '<div class="alts" style="text-align:left">' +
+      months.map(m=>'<div class="alt"><span><strong>'+m[0]+'</strong><br><small>'+m[1]+'</small></span></div>').join('') +
+      '</div>' +
+      '<button class="cta" onclick="window.print()" style="margin-top:18px">Print This Plan →</button>' +
+      '<p class="micro">Want this by email each month? <a href="#" id="plan-email">Get the plan sequence →</a></p></div>';
+    document.getElementById('plan-out').style.display='block';
+    document.getElementById('plan-email').addEventListener('click',e=>{
+      e.preventDefault();
+      track('email_optin',{source:'plan_generator'});
+      try{fetch('/api/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lid:getLid(),plan:card})}).catch(()=>{});}catch(err){}
+      e.target.textContent='Check your inbox — plan sequence starts →';
+      e.target.style.pointerEvents='none';
+    });
+    track('calculator_use',{calc:'plan_generator',card,dep});
+  });
+});
+</script>
+</body></html>

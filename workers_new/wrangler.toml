@@ -1,0 +1,22 @@
+name = "cardpath"
+main = "src/worker.js"
+compatibility_date = "2026-10-01"
+account_id = "0e8dd4314eb940218cacebd49988f61b"
+
+# Static assets dari build v4.3
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+
+# D1 database
+[[d1_databases]]
+binding = "DB"
+database_name = "cardpath-db"
+database_id = "da3ce6ac-2216-413d-a174-6fd64a69392c"
+
+# Custom domain (di-add setelah deploy via dashboard/API)
+# routes = [{ pattern = "cardpath.seputar-ntt.com", custom_domain = true }]
+
+[vars]
+CP_ENV = "production"

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Master Control v2 — CardPath</title>
+<style>
+:root{--u:#6a58e8;--red:#ef4444;--hair:#e5e7eb;--ink:#111827;--mut:#6b7280;--bg:#fff;--soft:#f9fafb}
+*{box-sizing:border-box;margin:0}
+body{font-family:Inter,-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:var(--bg);font-size:14px}
+a{color:var(--u);text-decoration:none}
+.hair{border:1px solid var(--hair)}
+#login{max-width:360px;margin:15vh auto;padding:32px;border:1px solid var(--hair);border-radius:12px}
+#login input{width:100%;padding:12px;border:1px solid var(--hair);border-radius:8px;margin:10px 0;font-size:15px}
+#login button{width:100%;padding:12px;background:var(--u);color:#fff;border:0;border-radius:8px;font-size:15px;cursor:pointer}
+#app{display:none}
+#layout{display:flex;min-height:100vh}
+#side{width:200px;border-right:1px solid var(--hair);padding:16px 0;background:var(--soft)}
+#side a{display:block;padding:10px 20px;color:var(--ink);font-weight:500;border-left:3px solid transparent}
+#side a.on{border-left-color:var(--u);color:var(--u);background:#fff}
+#main{flex:1;padding:24px;max-width:1200px}
+h1{font-size:20px;font-weight:600;margin-bottom:4px}
+.sub{color:var(--mut);font-size:13px;margin-bottom:20px}
+.panel{border:1px solid var(--hair);border-radius:10px;padding:18px;margin-bottom:18px}
+.panel h3{font-size:15px;font-weight:600;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 10px;color:var(--mut);font-weight:500;border-bottom:1px solid var(--hair);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+td{padding:8px 10px;border-bottom:1px solid var(--hair)}
+tr:hover td{background:var(--soft)}
+.chip{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;letter-spacing:.04em}
+.chip.real{background:#ecfdf5;color:#059669}
+.chip.derived{background:#eef2ff;color:var(--u)}
+.chip.alert{background:#fef2f2;color:var(--red)}
+.neg{color:var(--red);font-weight:600}
+.pos{color:#059669;font-weight:600}
+.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filters select,.filters input{padding:8px 10px;border:1px solid var(--hair);border-radius:8px;font-size:13px}
+.big{font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px}
+.stat{border:1px solid var(--hair);border-radius:10px;padding:14px}
+.stat .lbl{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+canvas{max-width:100%}
+#loginerr{color:var(--red);font-size:13px;display:none;margin-top:8px}
+.bar-wrap{background:var(--soft);border-radius:4px;height:8px;overflow:hidden}
+.bar-fill{height:100%;background:var(--u)}
+.bar-fill.red{background:var(--red)}
+</style></head>
+<body>
+<div id="login">
+  <h1 style="font-size:18px">Master Control v2</h1>
+  <p style="color:var(--mut);font-size:13px;margin-bottom:16px">CardPath dashboard — Shelby only</p>
+  <input type="password" id="pw" placeholder="Password">
+  <button onclick="doLogin()">Enter</button>
+  <div id="loginerr">Wrong password</div>
+</div>
+<div id="app"><div id="layout">
+  <div id="side">
+    <a href="#" data-panel="p0" class="on">P0 · Campaigns</a>
+    <a href="#" data-panel="p1" data-title="Cohort Drill-Down">P1 · Cohorts</a>
+    <a href="#" data-panel="p2" data-title="Funnel Detail">P2 · Funnel</a>
+    <a href="#" data-panel="p3" data-title="Ad Health">P3 · Ad Health</a>
+    <a href="#" data-panel="p4" data-title="KV Value Matrix">P4 · KV Matrix</a>
+    <a href="#" data-panel="p5" data-title="Quality & Alerts">P5 · Quality</a>
+    <a href="#" data-panel="p6" data-title="Editorial">P6 · Editorial</a>
+  </div>
+  <div id="main">
+    <h1 id="ptitle">Campaign Leaderboard</h1>
+    <div class="sub" id="psub">Spend vs journey vs NET — per campaign [REAL spend] + [DERIVED revenue]</div>
+    <div class="filters">
+      <select id="frange"><option value="7">Last 7 days</option><option value="14">14 days</option><option value="30">30 days</option></select>
+      <select id="fsource"><option value="">All sources</option><option value="gcl1">gcl1</option><option value="gcl2">gcl2</option><option value="metaa">metaa</option><option value="metab">metab</option></select>
+      <select id="fdevice"><option value="">All devices</option><option value="desktop">desktop</option><option value="mobile">mobile</option><option value="tablet">tablet</option></select>
+      <button onclick="load()" style="padding:8px 16px;background:var(--u);color:#fff;border:0;border-radius:8px;cursor:pointer">Apply</button>
+    </div>
+    <div id="content"></div>
+  </div>
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+var TOKEN=sessionStorage.getItem('dash_jwt')||'';
+var curPanel='p0';
+if(TOKEN){ showApp(); }
+function showApp(){ document.getElementById('login').style.display='none'; document.getElementById('app').style.display='block'; load(); }
+async function doLogin(){
+  var r=await fetch('/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:document.getElementById('pw').value})});
+  var d=await r.json();
+  if(d.ok){ TOKEN=d.token; sessionStorage.setItem('dash_jwt',TOKEN); document.getElementById('loginerr').style.display='none'; showApp(); }
+  else document.getElementById('loginerr').style.display='block';
+}
+document.querySelectorAll('#side a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();curPanel=a.dataset.panel;
+  document.querySelectorAll('#side a').forEach(x=>x.classList.remove('on'));a.classList.add('on');
+  document.getElementById('ptitle').textContent=a.dataset.title||a.textContent; load();}));
+async function api(panel){ var r=await fetch('/api/dash/'+panel+'?range='+document.getElementById('frange').value+'&source='+document.getElementById('fsource').value+'&device='+document.getElementById('fdevice').value,{headers:{Authorization:'Bearer '+TOKEN}}); if(r.status===401){sessionStorage.removeItem('dash_jwt');location.reload();return null;} return r.json(); }
+function chip(t,c){ return '<span class="chip '+c+'">'+t+'</span>'; }
+function fmt(n){ return n==null?'—':Number(n).toLocaleString('en-US'); }
+async function load(){
+  var d=await api(curPanel); if(!d) return;
+  var c=document.getElementById('content');
+  if(curPanel==='p0') return renderP0(c,d);
+  if(curPanel==='p2') return renderP2(c,d);
+  if(curPanel==='p3') return renderP3(c,d);
+  if(curPanel==='p4') return renderP4(c,d);
+  if(curPanel==='p5') return renderP5(c,d);
+  if(curPanel==='p6') return renderP6(c,d);
+  c.innerHTML='<div class="panel"><em>Panel '+curPanel+' — build in progress</em></div>';
+}
+function renderP0(c,d){
+  var spend=d.spend||[], sess={}; (d.sessions||[]).forEach(s=>sess[s.camp]=s);
+  var camps={}; spend.forEach(s=>{ camps[s.camp||s.CAMP||'(unknown)']={spend:s.spend,clicks:s.clicks,impr:s.impr,platform:s.platform}; });
+  Object.keys(sess).forEach(k=>{ if(!camps[k]) camps[k]={spend:0,clicks:0,impr:0,platform:'—'}; camps[k].sess=sess[k]; });
+  var rows=Object.entries(camps);
+  var h='<div class="panel"><h3>Campaign Leaderboard '+chip('REAL','real')+' spend / '+chip('DERIVED','derived')+' NET</h3>';
+  if(!rows.length){ h+='<p style="color:var(--mut)">Belum ada spend_events — connect Meta/Google token. Sessions dari tracking tetap tampil di bawah.</p>'; }
+  h+='<table><thead><tr><th>Campaign</th><th>Platform</th><th>Spend [REAL]</th><th>Clicks [REAL]</th><th>Sessions</th><th>Quiz ✓</th><th>Gate ✓</th><th>Jumps</th><th>Outbound</th><th>Engaged avg</th><th>NET [DERIVED]</th></tr></thead><tbody>';
+  rows.forEach(([k,v])=>{ var s=v.sess||{}; var net=(v.spend?(s.outb||0)*3.5-v.spend:0);
+    h+='<tr><td><strong>'+k+'</strong></td><td>'+v.platform+'</td><td>'+(v.spend?'$'+v.spend.toFixed(2):'—')+'</td><td>'+fmt(v.clicks)+'</td><td>'+fmt(s.sessions)+'</td><td>'+fmt(s.qc)+'</td><td>'+fmt(s.gc)+'</td><td>'+fmt(s.j)+'</td><td>'+fmt(s.outb)+'</td><td>'+fmt(s.eng?s.eng.toFixed(0):0)+'s</td><td class="'+(net<0?'neg':'pos')+'">'+(v.spend?'$'+net.toFixed(2):'—')+'</td></tr>'; });
+  h+='</tbody></table>';
+  // funnel sessions stats
+  var tS=0,tQ=0,tG=0,tJ=0,tO=0,tE=0;
+  (d.sessions||[]).forEach(s=>{tS+=s.sessions||0;tQ+=s.qc||0;tG+=s.gc||0;tJ+=s.j||0;tO+=s.outb||0;tE+=s.eng||0;});
+  h+='</div><div class="grid"><div class="stat"><div class="lbl">Sessions [REAL]</div><div class="big">'+fmt(tS)+'</div></div>';
+  h+='<div class="stat"><div class="lbl">Quiz Completed [REAL]</div><div class="big">'+fmt(tQ)+'</div></div>';
+  h+='<div class="stat"><div class="lbl">Gate Completed [REAL]</div><div class="big">'+fmt(tG)+'</div></div>';
+  h+='<div class="stat"><div class="lbl">Outbound [REAL]</div><div class="big">'+fmt(tO)+'</div></div></div>';
+  c.innerHTML=h;
+}
+function renderP2(c,d){
+  var f=d.funnel||[]; var order=['session_start','page_view','quiz_start','quiz_complete','gate_completed','jump_click','sub2_landing','p1_view','p2_view','outbound_click'];
+  var counts={}; f.forEach(x=>counts[x.event]=x.c);
+  var maxV=Math.max(1,...order.map(o=>counts[o]||0));
+  var h='<div class="panel"><h3>Funnel — '+chip('REAL','real')+'</h3>';
+  order.forEach((o,i)=>{ var v=counts[o]||0; var pct=Math.round(v/maxV*100);
+    var drop=i>0?Math.round((1-v/(counts[order[i-1]]||v))*100):0;
+    h+='<div style="margin:10px 0"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>'+o+'</span><span>'+fmt(v)+(i>0?' <span class="'+(drop>40?'neg':'')+'" style="font-size:11px">-'+drop+'%</span>':'')+'</span></div><div class="bar-wrap"><div class="bar-fill'+(drop>40?' red':'')+'" style="width:'+pct+'%"></div></div></div>'; });
+  h+='</div>'; c.innerHTML=h;
+}
+function renderP3(c,d){
+  var h='<div class="panel"><h3>Ad Health — '+chip('REAL','real')+' (GAM telemetry)</h3><table><thead><tr><th>Slot</th><th>Requested</th><th>Rendered</th><th>Fill %</th><th>Viewable %</th></tr></thead><tbody>';
+  (d.health||[]).forEach(x=>{ var fill=x.requested?Math.round(x.rendered/x.requested*100):0; var view=x.rendered?Math.round(x.viewable/x.rendered*100):0;
+    h+='<tr><td>'+x.slot+'</td><td>'+fmt(x.requested)+'</td><td>'+fmt(x.rendered)+'</td><td class="'+(fill<60?'neg':'pos')+'">'+fill+'%</td><td>'+view+'%</td></tr>'; });
+  h+='</tbody></table></div><div class="panel"><h3>Top Line Items (lelang winners) — '+chip('REAL','real')+'</h3><table><thead><tr><th>Line Item</th><th>Impressions</th></tr></thead><tbody>';
+  (d.winners||[]).forEach(x=>{ h+='<tr><td>'+(x.line_item_id||'(house/blank)')+'</td><td>'+fmt(x.c)+'</td></tr>'; });
+  h+='</tbody></table></div>'; c.innerHTML=h;
+}
+function renderP4(c,d){
+  var h='<div class="panel"><h3>KV Value Matrix — '+chip('REAL','real')+' impressions + '+chip('DERIVED','derived')+' eCPM</h3><table><thead><tr><th>KV Combo</th><th>Impressions</th><th>Rendered</th><th>Fill %</th></tr></thead><tbody>';
+  (d.matrix||[]).forEach(x=>{ var kv={}; try{kv=JSON.parse(x.kv_json||'{}')}catch(e){}
+    var combo=Object.entries(kv).map(([k,v])=>k+'='+v).join(' · ')||'(none)';
+    var fill=x.impr?Math.round(x.rendered/x.impr*100):0;
+    h+='<tr><td style="font-size:12px">'+combo+'</td><td>'+fmt(x.impr)+'</td><td>'+fmt(x.rendered)+'</td><td>'+fill+'%</td></tr>'; });
+  h+='</tbody></table></div>'; c.innerHTML=h;
+}
+function renderP5(c,d){
+  var h='<div class="panel"><h3>Traffic Quality — '+chip('REAL','real')+'</h3><div class="grid"><div class="stat"><div class="lbl">Bot Rate [REAL]</div><div class="big '+(d.bot_rate>0.2?'neg':'')+'">'+Math.round(d.bot_rate*100)+'%</div></div><div class="stat"><div class="lbl">Bot Total [REAL]</div><div class="big">'+fmt(d.bot_total)+'</div></div></div></div>';
+  h+='<div class="panel"><h3>Alerts (unacknowledged)</h3>';
+  if(!(d.alerts||[]).length) h+='<p style="color:var(--mut)">No alerts.</p>';
+  else { h+='<table><thead><tr><th>Type</th><th>Severity</th><th>Message</th><th></th></tr></thead><tbody>';
+    d.alerts.forEach(a=>{ h+='<tr><td>'+a.type+'</td><td><span class="chip '+(a.severity==='high'?'alert':'real')+'">'+a.severity+'</span></td><td>'+a.message+'</td><td><button onclick="ack('+a.id+')" style="padding:4px 10px;border:1px solid var(--hair);border-radius:6px;cursor:pointer;background:#fff">Ack</button></td></tr>'; });
+    h+='</tbody></table>'; }
+  h+='</div>'; c.innerHTML=h;
+}
+async function ack(id){ await fetch('/api/dash/ack',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify({alertId:id})}); load(); }
+function renderP6(c,d){
+  var h='<div class="panel"><h3>Editorial Pages — '+chip('REAL','real')+' pageviews [SUB2]</h3><table><thead><tr><th>Page</th><th>Pageviews</th></tr></thead><tbody>';
+  (d.pages||[]).forEach(x=>{ h+='<tr><td>'+x.page+'</td><td>'+fmt(x.pageviews)+'</td></tr>'; });
+  h+='</tbody></table><p class="micro" style="color:var(--mut);margin-top:10px">Revenue share per page: menunggu adsense_daily population.</p></div>'; c.innerHTML=h;
+}
+</script></body></html>

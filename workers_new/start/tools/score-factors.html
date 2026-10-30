@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Score Factor Explorer — CardPath</title>
+<meta name="description" content="What actually moves your FICO score: the 5 factors and their official weights (35/30/15/10/10) — with concrete actions for each.">
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="disclosure">Editorial content only. We may earn a commission from partners. Educational content — not financial advice.</div>
+<header class="topbar">
+  <div class="logo">Card<span class="dot">Path</span></div>
+  <nav><a data-fwd href="../../index.html">Home</a><a data-fwd href="../../quiz.html">Quiz</a><a data-fwd href="../../quiz.html" class="nav-cta">Find My Card</a></nav>
+</header>
+
+<main class="wrap">
+  <section class="hero" style="padding-bottom:6px">
+    <div class="eyebrow">Tool — Learn</div>
+    <h1 style="font-size:clamp(26px,4vw,36px);font-weight:450">Score factor explorer.</h1>
+    <p class="sub">FICO's official weights. Click a factor to see what moves it — and which of our picks helps that exact factor.</p>
+  </section>
+
+  <section>
+    <div class="quiz-shell" style="max-width:760px">
+      <div class="alts" id="factor-list"></div>
+      <div id="factor-detail" style="display:none;margin-top:20px"></div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap"><p class="fine">© 2026 CardPath. FICO weights: payment history 35% · amounts owed 30% · length 15% · mix 10% · new credit 10% (myFICO-published).</p></div></footer>
+<script src="../../app.js"></script><script src="../../kv.js"></script>
+<script>
+const FACTORS=[
+ {n:'Payment history',w:35,color:'var(--good)',
+  what:'Every on-time payment is a plus; every 30-day-late is a mark that lingers years.',
+  act:['Turn on autopay for at least the minimum — today.','If you missed one, pay and request goodwill adjustment after re-establishing.'],
+  products:[['chime','Chime — autopay-native'],['varo','Varo Believe — spend-only, nothing to miss'],['self','Self loan — fixed installments']]},
+ {n:'Amounts owed (utilization)',w:30,color:'var(--warn)',
+  what:'Balance ÷ limit, measured at statement date. Under 30% is the CFPB threshold; under 10% is optimal.',
+  act:['Pay BEFORE the statement date — the reported balance is what counts.','Request a credit line increase after 6 on-time months.'],
+  products:[['capone49','CapOne Secured — CLI review at 6 months'],['varo','Varo Believe — spend-only means utilization is your choice']]},
+ {n:'Length of history',w:15,color:'var(--accent-dark)',
+  what:'Age of your oldest account and average age. Time does the work — closing old cards hurts.',
+  act:['Never close your oldest card.','Start now: a card opened today is year-1 of a 10-year file.'],
+  products:[['chime','Chime — start at $0 cost'],['capone49','CapOne Secured — lowest entry']]},
+ {n:'Credit mix',w:10,color:'var(--ink-2)',
+  what:'Revolving (cards) + installment (loans) both present shows you handle both types.',
+  act:['If you only have a card, a credit-builder loan adds the installment category.'],
+  products:[['self','Self — loan + card hybrid'],['creditstrong','Credit Strong — loan from $15/mo'],['kikoff','Kikoff — $5/mo floor']]},
+ {n:'New credit',w:10,color:'var(--bad)',
+  what:'Each application can ding a few points for months. Clusters of applications read as distress.',
+  act:['One application at a time.','Use soft-pull pre-qualification before applying.'],
+  products:[['indigo','Indigo — prequal without hard pull'],['opensky','OpenSky — no credit check at all']]},
+];
+document.addEventListener('DOMContentLoaded',()=>{
+  const prof=JSON.parse(sessionStorage.getItem('cp_profile')||'{}');
+  document.getElementById('factor-list').innerHTML=FACTORS.map((f,i)=>
+    '<a class="alt" href="#" data-i="'+i+'"><span><strong>'+f.n+'</strong></span><span class="num">'+f.w+'%</span></a>').join('');
+  document.querySelectorAll('#factor-list .alt').forEach(a=>a.addEventListener('click',e=>{
+    e.preventDefault();
+    const f=FACTORS[+a.dataset.i];
+    document.querySelectorAll('#factor-list .alt').forEach(x=>x.style.background='');
+    a.style.background='var(--accent-tint)';
+    const det=document.getElementById('factor-detail');
+    det.innerHTML='<div class="verdict"><div class="match">'+f.w+'% of your score</div>' +
+      '<div class="cardname">'+f.n+'</div><p class="why">'+f.what+'</p>' +
+      '<div class="alts" style="text-align:left">'+f.act.map(x=>'<div class="alt"><span>'+x+'</span></div>').join('')+'</div>' +
+      '<p class="micro" style="margin-top:12px">Products that help this factor:</p>' +
+      '<div class="alts">'+f.products.map(pr=>{
+        const c=window.CARDSProxy && window.CARDSProxy[pr[0]];
+        const slug={chime:'chime-credit-builder',capone49:'capital-one-platinum-secured',quicksilver:'quicksilver-secured',varo:'varo-believe',self:'self-secured-visa',creditstrong:'credit-strong',kikoff:'kikoff',indigo:'indigo-mastercard',opensky:'opensky-secured'}[pr[0]]||'#';
+        return '<a class="alt" data-fwd href="../'+slug+'.html"><span><strong>'+pr[1]+'</strong></span><span>→</span></a>';
+      }).join('')+'</div></div>';
+    det.style.display='block';
+    track('calculator_use',{calc:'factor_explorer',factor:f.n});
+  }));
+  // auto-open first
+  const first=document.querySelector('#factor-list .alt'); if(first) first.click();
+});
+</script>
+</body></html>

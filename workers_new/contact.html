@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact — CardPath</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="disclosure">Editorial content only. We may earn a commission from partners.</div>
+<header class="topbar">
+  <div class="logo">Card<span class="dot">Path</span></div>
+  <nav><a data-fwd href="index.html">Home</a><a data-fwd href="index.html#guides">Guides</a><a data-fwd href="start/quiz.html" class="nav-cta">Find My Card</a></nav>
+</header>
+
+<main class="wrap">
+  <section class="hero" style="padding-bottom:6px">
+    <div class="eyebrow">Contact</div>
+    <h1 style="font-size:clamp(26px,4vw,36px);font-weight:450">Talk to a human.</h1>
+    <p class="sub">Corrections, data disputes, privacy requests, partnership questions — all go to the same inbox, answered within one business day.</p>
+  </section>
+  <section>
+    <div class="quiz-shell" style="max-width:640px">
+      <form onsubmit="event.preventDefault(); document.getElementById('contact-ok').style.display='block'; this.style.display='none';">
+        <div class="quiz-opts" style="gap:14px">
+          <input required type="text" placeholder="Your name" style="padding:13px 14px;font-size:16px;border:1.5px solid var(--hairline);border-radius:10px">
+          <input required type="email" placeholder="you@email.com — we reply here" style="padding:13px 14px;font-size:16px;border:1.5px solid var(--hairline);border-radius:10px">
+          <select style="padding:13px 14px;font-size:16px;border:1.5px solid var(--hairline);border-radius:10px">
+            <option>Report a correction</option><option>Privacy / CCPA request</option>
+            <option>Question about a card</option><option>Partnership</option><option>Other</option>
+          </select>
+          <textarea rows="5" placeholder="What's on your mind?" style="padding:13px 14px;font-size:16px;border:1.5px solid var(--hairline);border-radius:10px;font-family:inherit"></textarea>
+          <button class="cta full" type="submit">Send Message →</button>
+          <p class="micro" style="text-align:center">We reply within one business day. We never add you to marketing lists from a contact form.</p>
+        </div>
+      </form>
+      <div id="contact-ok" style="display:none;text-align:center;padding:30px">
+        <h2 style="font-size:20px;font-weight:500">Message received.</h2>
+        <p style="margin-top:8px">You'll hear from us by email within one business day. Meanwhile, the <a data-fwd href="start/quiz.html">quiz</a> is the fastest way to your match.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap"><p class="fine">© 2026 CardPath. Demo form — production wires to the email backend.</p></div></footer>
+<script src="app.js"></script>
+</body>
+</html>
