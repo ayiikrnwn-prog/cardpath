@@ -160,6 +160,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{ou
     <a href="#" data-panel="ads" data-title="Ad Slots">Ad Slots</a>
     <a href="#" data-panel="site" data-title="Website Studio">Website</a>
     <a href="#" data-panel="settings" data-title="Settings">Settings</a>
+    <a href="/style-lab.html" target="_blank" style="color:#8a8f98">🎨 Style Lab ↗</a>
   </nav>
 </div><div class="sidefoot">Metrics HQ v2 · CardPath</div></div>
 
@@ -181,7 +182,9 @@ async function doLogin(){
   else document.getElementById('loginerr').style.display='block';
 }
 function boot(){document.getElementById('login').style.display='none';document.getElementById('app').style.display='block';load()}
-document.querySelectorAll('#top nav a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();curPanel=a.dataset.panel;
+document.querySelectorAll('#top nav a').forEach(a=>a.addEventListener('click',e=>{
+  if(a.getAttribute('href') && a.getAttribute('href')!=='#'){ return; } // external link (Style Lab)
+  e.preventDefault();curPanel=a.dataset.panel;
   document.querySelectorAll('#top nav a').forEach(x=>x.classList.remove('on'));a.classList.add('on');load()}));
 document.querySelectorAll('#topbar2 .range button').forEach(b=>b.addEventListener('click',()=>{
   RANGE=b.dataset.r;

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Metrics HQ — Style Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600&family=Archivo+Black&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:#f6f9fc;color:#0a2540;min-height:100vh}
+
+/* ===== LAB SHELL (selalu light, netral) ===== */
+.lab{max-width:1240px;margin:0 auto;padding:28px 24px 80px}
+.lab-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px}
+.lab-title{font-size:20px;font-weight:600;letter-spacing:-.02em}
+.lab-title small{display:block;font-size:12.5px;font-weight:400;color:#6b7c93;margin-top:3px}
+.cats{display:flex;gap:6px;flex-wrap:wrap}
+.cat{padding:7px 14px;border-radius:999px;border:1px solid #e6ebf1;background:#fff;color:#425466;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+.cat:hover{border-color:#c7d2e0}
+.cat.on{background:#0a2540;color:#fff;border-color:#0a2540}
+
+/* style picker */
+.styles-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-bottom:26px}
+.style-card{border:1px solid #e6ebf1;border-radius:12px;background:#fff;padding:13px 15px;cursor:pointer;transition:all .15s;position:relative}
+.style-card:hover{border-color:#c7d2e0;transform:translateY(-1px)}
+.style-card.on{border-color:#6a58e8;box-shadow:0 0 0 2px rgba(106,88,232,.15)}
+.style-card h4{font-size:14px;font-weight:600;color:#0a2540}
+.style-card p{font-size:11.5px;color:#6b7c93;margin-top:3px;line-height:1.45}
+.style-card .meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.chip{font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px;letter-spacing:.02em}
+.chip.for{background:#eef3ff;color:#1f5eff}
+.chip.eff-1{background:#e6f7f0;color:#12805c}
+.chip.eff-2{background:#fdf4e3;color:#a3690a}
+.chip.eff-3{background:#fdeef2;color:#c02750}
+
+/* ===== PREVIEW STAGE ===== */
+.stage{border-radius:16px;overflow:hidden;border:1px solid #e6ebf1;transition:all .3s}
+.stage-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;font-size:12px;font-weight:500;color:#6b7c93;background:#fff;border-bottom:1px solid #e6ebf1}
+.preview{padding:26px;transition:all .3s}
+
+/* komponen demo (override oleh style) */
+.demo-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--hair,#e6ebf1);border:1px solid var(--hair,#e6ebf1);border-radius:var(--radius,12px);overflow:hidden;margin-bottom:18px}
+.kpi{background:var(--card,#fff);padding:16px 18px}
+.kpi .lbl{font-size:11px;font-weight:500;color:var(--mut,#6b7c93);display:flex;align-items:center;gap:6px}
+.kpi .val{font-size:22px;font-weight:600;color:var(--ink,#0a2540);margin-top:6px;font-variant-numeric:tabular-nums;letter-spacing:var(--numtrack,-.01em)}
+.kpi .sub{font-size:11px;color:var(--faint,#8792a2);margin-top:3px}
+.demo-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.btn-demo{padding:8px 16px;border-radius:var(--radius,8px);font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .12s}
+.btn-pri{background:var(--accent,#6a58e8);color:#fff}
+.btn-sec{background:var(--card,#fff);color:var(--ink,#0a2540);border-color:var(--hair,#e6ebf1)}
+.demo-table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card,#fff);border:1px solid var(--hair,#e6ebf1);border-radius:var(--radius,12px);overflow:hidden}
+.demo-table th{text-align:left;padding:10px 14px;font-size:11px;font-weight:600;color:var(--mut,#6b7c93);text-transform:var(--tht,uppercase);letter-spacing:.05em;border-bottom:1px solid var(--hair,#e6ebf1)}
+.demo-table td{padding:10px 14px;border-bottom:1px solid var(--hair2,rgba(230,235,241,.6));font-variant-numeric:tabular-nums}
+.demo-table tr:last-child td{border-bottom:0}
+.demo-table tr:hover td{background:var(--hover,rgba(246,249,252,.7))}
+.pos{color:#12805c;font-weight:500}.neg{color:#c02750;font-weight:500}
+
+/* ===== STYLE DEFINITIONS ===== */
+
+/* — MODERN SAAS CLEAN (default / Stripe-like) */
+.s-saas{--card:#fff;--ink:#0a2540;--mut:#6b7c93;--faint:#8792a2;--hair:#e6ebf1;--hair2:rgba(230,235,241,.6);--accent:#1f5eff;--hover:rgba(246,249,252,.7);--radius:12px}
+.preview.s-saas{background:#f6f9fc}
+
+/* — LINEAR DARK (dark minimal technical) */
+.s-linear{--card:rgba(255,255,255,.02);--ink:#f7f8f8;--mut:#8a8f98;--faint:#62666d;--hair:rgba(255,255,255,.08);--hair2:rgba(255,255,255,.05);--accent:#5e6ad2;--hover:rgba(255,255,255,.04);--radius:8px;--numtrack:-.02em}
+.preview.s-linear{background:#0f1011}
+.s-linear .demo-kpis{border-color:rgba(255,255,255,.08)}
+.s-linear .btn-sec{background:rgba(255,255,255,.02);color:#d0d6e0;border-color:rgba(255,255,255,.08)}
+.s-linear .demo-table{border-color:rgba(255,255,255,.08)}
+.s-linear .demo-table td{border-color:rgba(255,255,255,.05)}
+.s-linear .demo-table tr:hover td{background:rgba(255,255,255,.04)}
+
+/* — VERCEL TERMINAL (mono labels, paper white) */
+.s-vercel{--card:#fff;--ink:#171717;--mut:#4d4d4d;--faint:#8f8f8f;--hair:#e5e5e5;--hair2:#f0f0f0;--accent:#171717;--hover:#fafafa;--radius:6px}
+.preview.s-vercel{background:#fafafa}
+.s-vercel .kpi .lbl{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em}
+.s-vercel .btn-pri{background:#171717;border-radius:999px}
+.s-vercel .btn-sec{border-color:#e5e5e5;border-radius:999px}
+
+/* — BENTO GRID (Apple-style modular) */
+.s-bento{--card:#fff;--ink:#1d1d1f;--mut:#6e6e73;--faint:#86868b;--hair:#e8e8ed;--hair2:#f5f5f7;--accent:#0071e3;--hover:#f5f5f7;--radius:18px}
+.preview.s-bento{background:#f5f5f7}
+.s-bento .demo-kpis{gap:10px;background:transparent;border:0}
+.s-bento .kpi{border-radius:18px;border:1px solid #e8e8ed;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+
+/* — GLASSMORPHISM (frosted premium) */
+.s-glass{--card:rgba(255,255,255,.55);--ink:#101018;--mut:#3d3d55;--faint:#6a6a85;--hair:rgba(255,255,255,.7);--hair2:rgba(255,255,255,.35);--accent:#5e17eb;--hover:rgba(255,255,255,.65);--radius:16px}
+.preview.s-glass{background:linear-gradient(120deg,#c7d2fe 0%,#e0c3fc 40%,#8ec5fc 100%);position:relative}
+.s-glass .kpi,.s-glass .demo-table{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.s-glass .btn-sec{background:rgba(255,255,255,.5);backdrop-filter:blur(10px)}
+.s-glass .demo-table{border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.4)}
+.s-glass .demo-table tr:hover td{background:rgba(255,255,255,.5)}
+
+/* — NEUBRUTALISM (bold playful) */
+.s-neubrut{--card:#fffdf5;--ink:#111;--mut:#444;--faint:#666;--hair:#111;--hair2:#111;--accent:#ff6900;--hover:#fff3e0;--radius:0px}
+.preview.s-neubrut{background:#f5f0e6}
+.s-neubrut .kpi{border:2px solid #111;box-shadow:4px 4px 0 #111}
+.s-neubrut .demo-kpis{gap:12px;background:transparent;border:0;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.s-neubrut .btn-demo{border:2px solid #111;box-shadow:3px 3px 0 #111;font-weight:700;text-transform:uppercase;font-size:12px}
+.s-neubrut .btn-pri{background:#ff6900}
+.s-neubrut .btn-sec{background:#fffdf5}
+.s-neubrut .demo-table{border:2px solid #111;box-shadow:4px 4px 0 #111}
+.s-neubrut .demo-table th{background:#111;color:#fffdf5}
+.s-neubrut .kpi .val{font-family:'Archivo Black',sans-serif;font-weight:400}
+
+/* — DATA-DENSE PRO (Bloomberg-like) */
+.s-dense{--card:#10141c;--ink:#e8edf5;--mut:#7d8aa5;--faint:#5a6780;--hair:#1e2530;--hair2:#182029;--accent:#00c896;--hover:#151b26;--radius:4px;--tht:uppercase}
+.preview.s-dense{background:#0c1017;font-family:'JetBrains Mono',monospace}
+.s-dense .kpi{padding:10px 14px}
+.s-dense .kpi .val{font-size:17px}
+.s-dense .kpi .lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em}
+.s-dense .demo-table td,.s-dense .demo-table th{padding:6px 12px;font-size:11.5px}
+.s-dense .btn-pri{background:#00c896;color:#0c1017;font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase}
+
+/* — EDITORIAL PRINT (warm paper) */
+.s-editorial{--card:#fffdf9;--ink:#1a1611;--mut:#6b5f4e;--faint:#988a76;--hair:#e8e0d2;--hair2:#efe8db;--accent:#b3541e;--hover:#faf5ec;--radius:4px;--numtrack:0}
+.preview.s-editorial{background:#faf6ee}
+.s-editorial .kpi .val{font-family:'Space Grotesk',sans-serif}
+.s-editorial .demo-table th{font-family:'Space Grotesk',sans-serif;letter-spacing:.08em}
+
+/* — CYBERPUNK / FUTURISTIC */
+.s-cyber{--card:rgba(10,16,28,.85);--ink:#d6fff2;--mut:#5f8f9f;--faint:#3d6b7a;--hair:rgba(0,240,255,.25);--hair2:rgba(0,240,255,.12);--accent:#00f0ff;--hover:rgba(0,240,255,.08);--radius:2px}
+.preview.s-cyber{background:#050a12}
+.s-cyber .kpi .val{color:#00f0ff;text-shadow:0 0 12px rgba(0,240,255,.5);font-family:'JetBrains Mono',monospace}
+.s-cyber .kpi .lbl{font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.12em;font-size:9.5px}
+.s-cyber .btn-pri{background:transparent;color:#00f0ff;border:1px solid #00f0ff;box-shadow:0 0 14px rgba(0,240,255,.35),inset 0 0 8px rgba(0,240,255,.15)}
+.s-cyber .btn-sec{background:transparent;color:#5f8f9f;border-color:rgba(0,240,255,.25)}
+.s-cyber .demo-table{border-color:rgba(0,240,255,.25);background:rgba(10,16,28,.85)}
+.s-cyber .demo-table td{border-color:rgba(0,240,255,.12)}
+
+/* — CLAYMORPHISM (soft playful) */
+.s-clay{--card:#ffffff;--ink:#3d3a50;--mut:#8a86a3;--faint:#b0acc7;--hair:#efeaf6;--hair2:#f5f1fa;--accent:#8b5cf6;--hover:#faf8fd;--radius:20px}
+.preview.s-clay{background:#f0ebf8}
+.s-clay .kpi{box-shadow:8px 8px 16px #e2dbef,-6px -6px 12px #ffffff;border:0}
+.s-clay .demo-kpis{gap:14px;background:transparent;border:0;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.s-clay .btn-demo{box-shadow:5px 5px 12px #e2dbef,-4px -4px 10px #ffffff;font-weight:600}
+.s-clay .btn-sec{border:0}
+.s-clay .demo-table{border:0;box-shadow:8px 8px 16px #e2dbef,-6px -6px 12px #ffffff;border-radius:20px}
+
+/* — SWISS / BRUTALIST LIGHT (typography-first) */
+.s-swiss{--card:#fff;--ink:#000;--mut:#555;--faint:#999;--hair:#000;--hair2:#ddd;--accent:#e30613;--hover:#f5f5f5;--radius:0px;--numtrack:0}
+.preview.s-swiss{background:#fff}
+.s-swiss .kpi .val{font-weight:700;letter-spacing:-.03em}
+.s-swiss .demo-table th{text-transform:none;font-size:11px;font-weight:700;letter-spacing:0}
+.s-swiss .demo-table{border-left:3px solid #000}
+.s-swiss .btn-demo{border-radius:0;font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:11px}
+
+.style-note{margin-top:14px;padding:14px 18px;border-radius:12px;background:#fff;border:1px solid #e6ebf1;font-size:13px;color:#425466;line-height:1.65}
+.style-note b{color:#0a2540}
+.style-note .warn{color:#c02750}
+.style-note .good{color:#12805c}
+.footer-lab{margin-top:30px;font-size:11.5px;color:#8792a2;text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="lab">
+  <div class="lab-head">
+    <div class="lab-title">UI Style Lab — katalog desain untuk Metrics HQ
+      <small>Pilih kategori → pilih style → preview live komponen dashboard. Berdasarkan riset style encyclopedia + benchmark Stripe/Linear/Vercel.</small>
+    </div>
+    <div class="cats" id="cats"></div>
+  </div>
+  <div class="styles-row" id="stylesRow"></div>
+  <div class="stage">
+    <div class="stage-bar"><span id="stageName">—</span><span>live preview · komponen nyata dashboard</span></div>
+    <div class="preview" id="preview">
+      <div class="demo-kpis">
+        <div class="kpi"><div class="lbl">NET POSITION</div><div class="val">Rp-243.113</div><div class="sub">burning</div></div>
+        <div class="kpi"><div class="lbl">SPEND</div><div class="val">Rp243.113</div><div class="sub">1 campaigns</div></div>
+        <div class="kpi"><div class="lbl">SESSIONS</div><div class="val">141</div><div class="sub">11s avg engaged</div></div>
+        <div class="kpi"><div class="lbl">QUIZ → GATE</div><div class="val">10 → 1</div><div class="sub">7.1% completion</div></div>
+      </div>
+      <div class="demo-row">
+        <button class="btn-demo btn-pri">Export CSV</button>
+        <button class="btn-demo btn-sec">Drill down</button>
+        <button class="btn-demo btn-sec">Custom range</button>
+      </div>
+      <table class="demo-table">
+        <thead><tr><th>Campaign</th><th>Spend</th><th>Sessions</th><th>Quiz ✓</th><th>NET</th></tr></thead>
+        <tbody>
+          <tr><td>metaa_test1</td><td>Rp243.113</td><td>94</td><td>10</td><td class="neg">Rp-243.113</td></tr>
+          <tr><td>metaa_v2</td><td>—</td><td>44</td><td>0</td><td class="pos">Rp0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="style-note" id="note"></div>
+  <div class="footer-lab">Metrics HQ Style Lab · data komponen = angka real CardPath 30 Okt · semua style diuji kontras & keterbacaan tabel</div>
+</div>
+
+<script>
+var STYLES=[
+ {id:'saas',cat:'Modern SaaS',name:'Modern SaaS Clean',desc:'Card putih, hairline border, 1 accent biru. Standar Stripe/Notion.',best:'Universal · BI dashboards',eff:1,
+  cls:'s-saas',note:'<b>Modern SaaS Clean</b> — gaya yang dipakai Metrics HQ sekarang. Kartu putih di atas background abu sangat muda, garis pemisah tipis (hairline), satu warna aksen untuk aksi. <span class="good">Kelebihan:</span> paling aman & tidak pernah salah, keterbacaan maksimal untuk tabel padat angka. <span class="warn">Kekurangan:</span> tidak ada "wow factor" — terlihat seperti ribuan dashboard lain.'},
+ {id:'linear',cat:'Dark Technical',name:'Linear Dark',desc:'Near-black berlapis, teks hampir putih, indigo #5e6ad2. Bahasa alat profesional.',best:'Dev tools · analytics pro',eff:2,
+  cls:'s-linear',note:'<b>Linear Dark</b> — bukan dark mode hasil inversi, tapi sistem kedalaman via tingkat kecerahan (luminance stacking): panel 0.02 → surface 0.04 → hover 0.05 opacity putih. Teks #f7f8f8 (bukan putih murni — mengurangi kelelahan mata). Indigo #5e6ad2 hanya untuk aksi. <span class="good">Kelebihan:</span> fokus, premium, standar de-facto tools developer & analytics. <span class="warn">Kekurangan:</span> tabel data padat butuh kontras border ekstra; butuh rewrite ~50% CSS.'},
+ {id:'vercel',cat:'Dark Technical',name:'Vercel Terminal',desc:'Paper white, mono uppercase labels, pill button hitam. Presisi monokrom.',best:'Infra tools · technical products',eff:1,
+  cls:'s-vercel',note:'<b>Vercel Terminal</b> — "terminal di atas kertas putih". Label pakai JetBrains Mono uppercase 10px, tombol utama hitam pill penuh, warna hampir nol. <span class="good">Kelebihan:</span> eksekusi termurah (hanya restyle tipografi & tombol), terlihat sangat disiplin. <span class="warn">Kekurangan:</span> hierarki bergantung penuh pada tipografi — kurang cocok kalau kamu suka ada warna pembeda panel.'},
+ {id:'bento',cat:'Layout Modern',name:'Bento Grid',desc:'Kartu terpisah radius besar ala Apple keynote. Modul-modul mandiri.',best:'Overview pages · presentation',eff:1,
+  cls:'s-bento',note:'<b>Bento Grid</b> — tiap metrik jadi kartu terpisah (radius 18px, shadow lembut) seperti fitur page Apple. <span class="good">Kelebihan:</span> cocok untuk halaman Overview yang dipresentasikan ke director — tiap angka punya "kotaknya sendiri". <span class="warn">Kekurangan:</span> makan ruang vertikal lebih banyak; untuk tabel data padat tetap perlu gaya polos.'},
+ {id:'glass',cat:'Premium Depth',name:'Glassmorphism',desc:'Panel kaca buram di atas gradient warna. Depth via blur, bukan shadow.',best:'Marketing dashboard · showcase',eff:2,
+  cls:'s-glass',note:'<b>Glassmorphism</b> — kartu kaca buram (backdrop-blur 14px) di atas gradient warna-warni. <span class="good">Kelebihan:</span> paling fotogenik, cocok untuk screenshot pitch deck / demo ke director. <span class="warn">Kekurangan:</span> berat di GPU perangkat lemah, kontras teks rawan turun di atas gradient terang — butuh pengujian keterbacaan per panel. Kurang disarankan untuk kerja harian baca angka.'},
+ {id:'neubrut',cat:'Bold Statement',name:'Neubrutalism',desc:'Border hitam tebal, offset shadow keras, warna flat berani. Karakter kuat.',best:'Indie brand · statement UI',eff:1,
+  cls:'s-neubrut',note:'<b>Neubrutalism</b> — border hitam 2px, shadow offset 4px tanpa blur, tombol uppercase tebal. Gaya "anti-korporat" yang ramai dipakai startup indie (Gumroad). <span class="good">Kelebihan:</span> karakter sangat kuat, mudah dikenali, eksekusi CSS murah. <span class="warn">Kekurangan:</span> untuk dashboard keuangan bisa terkesan kurang serius; angka kehilangan kesan presisi.'},
+ {id:'dense',cat:'Data Terminal',name:'Data-Dense Pro',desc:'Bloomberg-terminal: mono, padding minim, informasi maksimum per pixel.',best:'Trading · monitoring 24/7',eff:2,
+  cls:'s-dense',note:'<b>Data-Dense Pro</b> — terminal ala Bloomberg: monospace, padding 6px, semua uppercase kecil, hijau neon untuk angka penting. <span class="good">Kelebihan:</span> menampung 2-3x data lebih banyak per layar — ideal kalau kamu mulai memantau banyak campaign/slot sekaligus. <span class="warn">Kekurangan:</span> padat = melelahkan untuk sesi santai; butuh terbiasa.'},
+ {id:'editorial',cat:'Warm Minimal',name:'Editorial Print',desc:'Kertas hangat, ink gelap, accent terracotta. Seperti majalah cetak.',best:'Report mingguan · laporan director',eff:1,
+  cls:'s-editorial',note:'<b>Editorial Print</b> — nuansa kertas koran/majalah: background krem hangat, tinta gelap, aksen terracotta tunggal, judul Space Grotesk. <span class="good">Kelebihan:</span> nyaman dibaca lama, cocok untuk report mingguan yang dikirim ke director — terasa "dokumen serius". <span class="warn">Kekurangan:</span> kurang "app-like"; warna hangat kurang asosiasi dengan data real-time.'},
+ {id:'cyber',cat:'Bold Statement',name:'Cyberpunk HUD',desc:'Neon cyan di deep dark, glow effect, mono uppercase. Futuristik.',best:'Gaming · crypto · showcase',eff:2,
+  cls:'s-cyber',note:'<b>Cyberpunk HUD</b> — neon cyan dengan text-shadow glow, border semi-transparan, semua mono uppercase. <span class="good">Kelebihan:</span> paling mencolok, memorable. <span class="warn">Kekurangan:</span> glow mengganggu keterbacaan angka dalam jumlah banyak; berisiko terlihat gimmick untuk dashboard bisnis serius. Direkomendasikan hanya untuk halaman showcase.'},
+ {id:'clay',cat:'Premium Depth',name:'Claymorphism',desc:'Kartu lembut mengembang, double shadow in-out. Ramah & modern.',best:'Consumer apps · ed-tech',eff:2,
+  cls:'s-clay',note:'<b>Claymorphism</b> — penerus neumorphism yang lebih ramah: kartu putih dengan double shadow (gelap di bawah-kanan, terang di atas-kiri) memberi efek "clay mengembang". <span class="good">Kelebihan:</span> terasa ramah & lembut, kontras tetap aman (beda dari neumorphism klasik). <span class="warn">Kekurangan:</span> banyak shadow = banyak layer render; gayanya playful — kurang match dengan nuansa keuangan.'},
+ {id:'swiss',cat:'Bold Statement',name:'Swiss / Typographic',desc:'Hitam-putih tegas, tipografi berbicara, accent merah tunggal. Swiss 1950s.',best:'Report · dokumentasi · report director',eff:1,
+  cls:'s-swiss',note:'<b>Swiss Typographic</b> — warisan Swiss International Style 1950-an: hitam di putih, grid tegas, tipografi sebagai satu-satunya dekorasi, merah #e30613 hanya untuk hal paling penting. <span class="good">Kelebihan:</span> timeless, sangat murah dieksekusi, fokus 100% ke angka. <span class="warn">Kekurangan:</span> bisa terasa dingin/kaku; tanpa depth cues, perlu disiplin spacing ekstra.'}
+];
+var CATS=[...new Set(STYLES.map(s=>s.cat))];
+var curCat='Semua', curStyle='saas';
+function renderCats(){
+  var el=document.getElementById('cats');
+  el.innerHTML=['Semua'].concat(CATS).map(c=>'<button class="cat'+(c===curCat?' on':'')+'" onclick="setCat(\''+c+'\')">'+c+'</button>').join('');
+}
+function setCat(c){curCat=c;renderCats();renderStyles();}
+function renderStyles(){
+  var list=STYLES.filter(s=>curCat==='Semua'||s.cat===curCat);
+  document.getElementById('stylesRow').innerHTML=list.map(s=>
+    '<div class="style-card'+(s.id===curStyle?' on':'')+'" onclick="setStyle(\''+s.id+'\')">'+
+    '<h4>'+s.name+'</h4><p>'+s.desc+'</p><div class="meta"><span class="chip for">'+s.best.split('·')[0].trim()+'</span>'+
+    '<span class="chip eff-'+s.eff+'">'+(s.eff===1?'eksekusi murah':s.eff===2?'eksekusi sedang':'eksekusi berat')+'</span></div></div>').join('');
+}
+function setStyle(id){
+  curStyle=id;renderStyles();
+  var s=STYLES.find(x=>x.id===id);
+  var pv=document.getElementById('preview');
+  pv.className='preview '+s.cls;
+  document.getElementById('stageName').textContent=s.name+' · '+s.cat;
+  document.getElementById('note').innerHTML=s.note;
+  pv.style.transition='none';pv.style.opacity='.4';
+  requestAnimationFrame(()=>{pv.style.transition='all .3s';pv.style.opacity='1';});
+}
+renderCats();renderStyles();setStyle('saas');
+</script>
+</body>
+</html>
