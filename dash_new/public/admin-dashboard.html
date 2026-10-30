@@ -66,6 +66,9 @@ a{color:var(--accent);text-decoration:none}
 
 /* ===== VERDICT — BENTO: kartu terpisah masing-masing ===== */
 .verdict{display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:12px;margin-bottom:20px}
+.vstat:first-child{grid-column:span 2}
+.vstat:first-child .val{font-size:30px}
+@media(max-width:760px){.vstat:first-child{grid-column:span 1}.vstat:first-child .val{font-size:24px}}
 .vstat{background:var(--card);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow-card);transition:all .22s cubic-bezier(.2,.8,.2,1);position:relative;overflow:hidden}
 .vstat:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
 .vstat::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:3px 3px 0 0;background:var(--accent);opacity:.85}
@@ -360,7 +363,8 @@ function v2(P,d){
   var prev=null;
   var inner=steps.map((s,i)=>{var v=counts[s[0]]||0;var w=Math.max(2,Math.round(v/maxV*100));
     var drop=prev!=null&&prev>0?Math.round((1-v/prev)*100):null;
-    return '<div class="funnel-row"><div class="top"><span class="nm">'+s[1]+'</span><span><span class="num" style="color:var(--ink)">'+fmt(v)+'</span> '+(drop!=null?'<span class="dr'+(drop>40?' bad':'')+'">−'+drop+'%</span>':'')+'</span></div><div class="bar"><i class="'+(drop>40?'bad':(i<2?'dim':''))+'" style="width:'+w+'%"></i></div></div>';
+    prev=v;
+    return '<div class="funnel-row"><div class="top"><span class="nm">'+s[1]+'</span><span><span class="num" style="color:var(--ink)">'+fmt(v)+'</span> '+(drop!=null?(drop>40?'<span class="dr bad">−'+drop+'%</span>':(drop>0?'<span class="dr">−'+drop+'%</span>':(drop<0?'<span class="dr" style="color:var(--green)">+'+(-drop)+'%</span>':''))):'')+'</span></div><div class="bar"><i class="'+(drop>40?'bad':(i<2?'dim':''))+'" style="width:'+w+'%"></i></div></div>';
   }).join('');
   if(!(f||[]).length) inner=emptyBox('No events in this range yet.');
   P.innerHTML='<div class="panel"><div class="head"><h3>Conversion Funnel</h3><div style="display:flex;gap:8px;align-items:center"><span class="note">'+chip('REAL','real')+' first-party · red = drop-off >40%</span><button class="export" onclick="exportPanel(\'p2\')">Export CSV</button></div></div><div class="body>'+inner+'</div></div>';
@@ -533,7 +537,7 @@ async function vSite(P){
   var d=await api('site'); if(!d) return;
   var sub = window.__wsSub||'inj';
   var h='<div class="filters" style="gap:0;border:1px solid var(--hair);border-radius:8px;overflow:hidden;width:max-content;margin-bottom:16px">'
-   +[['inj','Head & Footer'],['art','Artikel'],['menu','Menus']].map(t=>'<button style="padding:7px 16px;border:0;background:'+(sub===t[0]?'var(--ink)':'#fff')+';color:'+(sub===t[0]?'#fff':'var(--mut)')+';font-size:13px;cursor:pointer" onclick="wsSub(\''+t[0]+'\')">'+t[1]+'</button>').join('')
+   +[['inj','Head & Footer'],['art','Artikel'],['menu','Menus']].map(t=>'<button style="padding:7px 16px;border:0;background:'+(sub===t[0]?'var(--ink)':'#f0f0f3')+';color:'+(sub===t[0]?'#fff':'var(--mut)')+';font-size:13px;font-weight:500;border-radius:9px;cursor:pointer;transition:all .15s" onclick="wsSub(\''+t[0]+'\')">'+t[1]+'</button>').join('')
    +'</div><div id="wsbody"></div>';
   P.innerHTML=h;
   if(sub==='inj') renderInj(document.getElementById('wsbody'), d);
