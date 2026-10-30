@@ -191,9 +191,12 @@ function chip(t,c){return '<span class="chip '+c+'">'+t+'</span>'}
 function exportPanel(p){
   var a=document.createElement('a');a.href='/api/dash/'+p+'?range='+RANGE+'&format=csv';a.click();
 }
+var P0CACHE=null;
 async function load(){
+  if(curPanel==='p0'){ P0CACHE=null; }
+  else if(!P0CACHE){ P0CACHE=await api('p0'); }
   var d=await api(curPanel); if(!d)return;
-  renderVerdict(curPanel,d);
+  renderVerdict(curPanel, curPanel==='p0'?d:P0CACHE||d);
   var P=document.getElementById('panels');
   ({p0:v0,p1:v1,p2:v2,p3:v3,p4:v4,p5:v5,p6:v6,settings:vS,ads:vA,site:vSite}[curPanel]||v0)(P,d);
 }
