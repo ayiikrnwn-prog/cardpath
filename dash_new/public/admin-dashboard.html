@@ -96,7 +96,8 @@ a{color:var(--accent);text-decoration:none}
 .panel .head{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid var(--hair2)}
 .panel .head h3{font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
 .note{font-size:11.5px;color:var(--faint)}
-.panel .body{padding:18px 20px}
+.panel .body{padding:18px 20px;overflow-x:auto}
+.panel .body table{min-width:max-content}
 
 /* ===== TABLES ===== */
 table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
@@ -167,6 +168,8 @@ input::placeholder{color:var(--faint)}
 .hist-row .hv{font-size:11.5px;color:var(--ink);font-weight:500}
 
 /* ===== MISC ===== */
+.codecell{font-family:var(--mono);font-size:11.5px;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:768px){.codecell{max-width:200px}}
 .empty{padding:30px;text-align:center;color:var(--faint);font-size:13px;border:1.5px dashed #d5d5dc;border-radius:16px;background:#fbfbfd}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .spark{display:inline-flex;align-items:flex-end;gap:1.5px;height:18px}
@@ -566,7 +569,7 @@ async function vSite(P){
 }
 function wsSub(s){ window.__wsSub=s; load(); }
 function renderInj(el,d){
-  var rows=(d.injections||[]).map(i=>'<tr><td class="strong">'+i.placement+'</td><td><span class="chip '+(i.scope==='sub1'?'derived':i.scope==='sub2'?'real':'derived')+'">'+i.scope+'</span></td><td style="font-family:var(--mono);font-size:11.5px;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(i.code||'').slice(0,90).replace(/</g,'&lt;')+'</td><td><span class="chip '+(i.enabled?'real':'alert')+'">'+(i.enabled?'ON':'OFF')+'</span></td><td class="r"><button class="ack" onclick="injToggle('+i.id+','+(i.enabled?0:1)+')">'+(i.enabled?'Off':'On')+'</button> <button class="ack" onclick="injDel('+i.id+')">Del</button></td></tr>').join('');
+  var rows=(d.injections||[]).map(i=>'<tr><td class="strong">'+i.placement+'</td><td><span class="chip '+(i.scope==='sub1'?'derived':i.scope==='sub2'?'real':'derived')+'">'+i.scope+'</span></td><td class="codecell">'+(i.code||'').slice(0,90).replace(/</g,'&lt;')+'</td><td><span class="chip '+(i.enabled?'real':'alert')+'">'+(i.enabled?'ON':'OFF')+'</span></td><td class="r"><button class="ack" onclick="injToggle('+i.id+','+(i.enabled?0:1)+')">'+(i.enabled?'Off':'On')+'</button> <button class="ack" onclick="injDel('+i.id+')">Del</button></td></tr>').join('');
   el.innerHTML='<div class="panel"><div class="head"><h3>Head & Footer Injections</h3><span class="note">kode disuntik ke SEMUA halaman sesuai scope — live tanpa deploy</span></div><div class="body">'
    +(rows?'<table><thead><tr><th>Placement</th><th>Scope</th><th>Kode</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>':emptyBox('Belum ada injeksi.'))
    +'</div></div><div class="panel"><div class="head"><h3>Tambah Injeksi</h3><span class="note">paste kode apa pun — pixel, verifikasi, widget</span></div><div class="body">'
@@ -597,7 +600,7 @@ function renderArt(el,d){
    +'<div class="stg"><div class="sk">Meta desc</div><input id="art_meta" style="flex:1;max-width:420px" placeholder="meta description untuk SEO"></div>'
    +'<div class="stg"><div class="sk">Sub</div><select id="art_sub" style="padding:7px 10px;border:1px solid var(--hair);border-radius:8px"><option value="sub2">cardpath.*</option><option value="sub1">card.*</option></select>'
    +'<div class="sk" style="margin-left:16px">Status</div><select id="art_pub" style="padding:7px 10px;border:1px solid var(--hair);border-radius:8px"><option value="1">Published</option><option value="0">Draft</option></select></div>'
-   +'<div style="padding:10px 20px"><textarea id="art_body" placeholder="# Judul besar&#10;&#10;paragraf...&#10;&#10;## Sub-heading&#10;- list item" style="width:100%;min-height:260px;padding:12px;border:1px solid var(--hair);border-radius:10px;font-family:var(--mono);font-size:12.5px"></textarea></div>'
+   +'<div style="padding:10px 20px"><textarea id="art_body" placeholder="# Judul besar&#10;&#10;paragraf...&#10;&#10;## Sub-heading&#10;- list item" style="width:100%;min-height:260px;padding:12px;border:1px solid var(--hair);border-radius:10px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;overflow-wrap:anywhere"></textarea></div>'
    +'<div style="padding:0 20px"><p class="sk" style="margin-bottom:6px">FAQ (JSON — optional): <input id="art_faq" placeholder=\'[{"q":"...","a":"..."}]\' style="width:70%;padding:8px;border:1px solid var(--hair);border-radius:8px;font-size:12px"></p></div>'
    +'<button class="btn-save" onclick="artSave()">Publish artikel</button><span id="artmsg" style="font-size:12px;color:var(--green);padding-left:8px"></span></div></div>';
 }
