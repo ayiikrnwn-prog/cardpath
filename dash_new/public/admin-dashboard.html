@@ -34,7 +34,7 @@ a{color:var(--accent);text-decoration:none}
 #login .box p{font-size:13.5px;color:var(--mut);margin:6px 0 22px}
 #login input{width:100%;padding:12px 14px;background:#f5f5f7;border:1px solid transparent;border-radius:12px;color:var(--ink);font-size:14px;outline:none;transition:all .15s}
 #login input:focus{background:#fff;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
-#login .btn{width:100%;margin-top:12px;border-radius:12px;padding:12px}
+#login .btn{width:100%;margin-top:12px}
 #loginerr{display:none;color:var(--red);font-size:12.5px;margin-top:10px}
 
 /* ===== SIDEBAR (bento: floating panel) ===== */
@@ -118,7 +118,27 @@ th.r,td.r{text-align:right}
 .btn{padding:9px 18px;background:var(--accent);color:#fff;border:0;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s cubic-bezier(.2,.8,.2,1);box-shadow:0 4px 12px rgba(0,113,227,.25)}
 .btn:hover{background:var(--accent-deep);transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,113,227,.32)}
 .btn:active{transform:translateY(0)}
-button.export{padding:6px 13px;font-size:11.5px;background:#f5f5f7;color:var(--mut);border:0;border-radius:10px;cursor:pointer;font-weight:500;transition:all .15s}
+/* ===== BUTTON SYSTEM (seragam) ===== */
+button{font-family:inherit}
+.range button{font-family:inherit}
+.btn{padding:9px 18px;background:var(--accent);color:#fff;border:0;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s cubic-bezier(.2,.8,.2,1);box-shadow:0 4px 12px rgba(0,113,227,.22);font-family:inherit;display:inline-flex;align-items:center;gap:7px}
+.btn:hover{background:var(--accent-deep);transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,113,227,.3)}
+.btn:active{transform:translateY(0)}
+.btn-ghost{background:#f0f0f3;color:var(--mut);box-shadow:none;border:0}
+.btn-ghost:hover{background:var(--ink);color:#fff;transform:none;box-shadow:none}
+.btn-sm{padding:6px 13px;font-size:11.5px;border-radius:10px}
+.btn-danger{background:var(--red-soft);color:var(--red);box-shadow:none}
+.btn-danger:hover{background:var(--red);color:#fff;transform:none;box-shadow:none}
+button.export{padding:6px 13px;font-size:11.5px;background:#f0f0f3;color:var(--mut);border:0;border-radius:10px;cursor:pointer;font-weight:500;transition:all .15s}
+button.export:hover{background:var(--ink);color:#fff}
+button.ack{padding:5px 12px;font-size:11px;background:#f0f0f3;color:var(--mut);border:0;border-radius:9px;cursor:pointer;font-weight:500;transition:all .15s;font-family:inherit}
+button.ack:hover{background:var(--green);color:#fff}
+.wtab{padding:8px 16px;border:0;background:#f0f0f3;color:var(--mut);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit}
+.wtab:first-child{border-radius:11px 0 0 11px}
+.wtab:last-child{border-radius:0 11px 11px 0}
+.wtab.on{background:var(--ink);color:#fff}
+.btn-save{padding:9px 20px;background:var(--accent);color:#fff;border:0;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;box-shadow:0 4px 12px rgba(0,113,227,.22);font-family:inherit}
+.btn-save:hover{background:var(--accent-deep);transform:translateY(-1px)}
 button.export:hover{background:var(--ink);color:#fff}
 input,select,textarea{background:#f5f5f7;border:1px solid transparent;border-radius:10px;color:var(--ink);font-family:inherit;font-size:13px;outline:none;transition:all .15s}
 input:focus,select:focus,textarea:focus{background:#fff;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
@@ -460,7 +480,7 @@ async function vA(P){
       +'<td>'+advHtml+'</td>'
       +'<td><span class="chip '+(s.enabled?'real':'alert')+'">'+(s.enabled?'ACTIVE':'OFF')+'</span></td>'
       +'<td class="r"><button class="ack" onclick="slotToggle(\''+s.slot_id+'\','+(s.enabled?0:1)+')">'+(s.enabled?'Disable':'Enable')+'</button> '
-      +'<button class="ack" onclick="slotDel(\''+s.slot_id+'\')">Del</button></td></tr>';
+      +'<button class="ack" style="color:var(--red)" onclick="slotDel(\''+s.slot_id+'\')">Del</button></td></tr>';
   }).join('');
   var tbl=rows?'<table><thead><tr><th>Slot</th><th>Placement</th><th class="r">Req</th><th class="r">Rendered</th><th class="r">Fill</th><th class="r">Viewable</th><th class="r">p50</th><th class="r">p95</th><th>Advertisers menang</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>'
     :emptyBox('No slots configured.');
@@ -537,7 +557,7 @@ async function vSite(P){
   var d=await api('site'); if(!d) return;
   var sub = window.__wsSub||'inj';
   var h='<div class="filters" style="gap:0;border:1px solid var(--hair);border-radius:8px;overflow:hidden;width:max-content;margin-bottom:16px">'
-   +[['inj','Head & Footer'],['art','Artikel'],['menu','Menus']].map(t=>'<button style="padding:7px 16px;border:0;background:'+(sub===t[0]?'var(--ink)':'#f0f0f3')+';color:'+(sub===t[0]?'#fff':'var(--mut)')+';font-size:13px;font-weight:500;border-radius:9px;cursor:pointer;transition:all .15s" onclick="wsSub(\''+t[0]+'\')">'+t[1]+'</button>').join('')
+   +[['inj','Head & Footer'],['art','Artikel'],['menu','Menus']].map(t=>'<button class="wtab'+(sub===t[0]?' on':'')+'" onclick="wsSub(\''+t[0]+'\')">'+t[1]+'</button>').join('')
    +'</div><div id="wsbody"></div>';
   P.innerHTML=h;
   if(sub==='inj') renderInj(document.getElementById('wsbody'), d);
