@@ -331,7 +331,7 @@ function v5(P,d){
 }
 function v6(P,d){
   var rows=(d.pages||[]).slice(0,30).map(x=>'<tr><td class="strong" style="font-size:12.5px">'+x.page+'</td><td class="r">'+fmt(x.pageviews)+'</td></tr>').join('');
-  var q=(d.quality||[]).filter(x=>x.pageviews>0).slice(0,30).map(x=>'<tr><td class="strong" style="font-size:12.5px">'+x.page+'</td><td class="r">'+fmt(x.pageviews)+'</td><td class="r">'+(x.sessions?avg(x.eng,x.sessions)+'s':'—')+'</td><td class="r">'+(x.sessions?Math.round(x.scr/x.sessions)+'%':'—')+'</td></tr>').join('');
+  var q=(d.quality||[]).filter(x=>(x.sessions||0)>0).slice(0,30).map(x=>'<tr><td class="strong" style="font-size:12.5px">'+x.page+'</td><td class="r">'+fmt(x.sessions)+'</td><td class="r">'+(x.sessions?avg(x.eng,x.sessions)+'s':'—')+'</td><td class="r">'+(x.sessions?Math.round(x.scr/x.sessions)+'%':'—')+'</td></tr>').join('');
   P.innerHTML='<div class="panel"><div class="head"><h3>Content Performance</h3><div style="display:flex;gap:8px;align-items:center"><span class="note">'+chip('REAL','real')+' money pages · revenue share pending AdSense API</span><button class="export" onclick="exportPanel(\'p6\')">Export CSV</button></div></div><div class="body>'+(q?'<table><thead><tr><th>Page</th><th class="r">Pageviews</th><th class="r">Avg engaged</th><th class="r">Avg scroll</th></tr></thead><tbody>'+q+'</tbody></table>':emptyBox('No page views in this range.'))+'</div></div>';
 }
 async function ack(id){await fetch('/api/dash/ack',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify({alertId:id})});load()}

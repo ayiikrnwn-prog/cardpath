@@ -844,6 +844,7 @@ window.__cpDebug = {
 // ---------- init ----------
 document.addEventListener('DOMContentLoaded', () => {
   forwardUtmLinks();
+  try { if (!sessionStorage.getItem('cp_quiz_started_at')) sessionStorage.setItem('cp_quiz_started_at', String(Date.now())); } catch(e){}
   quizRender();
   resultsRender();
   calcOdds();
