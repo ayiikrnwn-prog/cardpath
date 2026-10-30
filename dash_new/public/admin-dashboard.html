@@ -52,10 +52,10 @@ button{font-family:inherit;cursor:pointer}
 /* content area: offset utk sidebar */
 #shell{margin-left:216px}
 #topbar2{max-width:1240px;margin:0 auto;padding:16px 24px 0;display:flex;align-items:center;gap:12px;justify-content:flex-end}
-#top .range{display:flex;gap:0;border:1px solid var(--hair);border-radius:8px;overflow:hidden}
-#top .range button{padding:6px 13px;font-size:12.5px;border:0;background:#fff;color:var(--mut);border-right:1px solid var(--hair)}
-#top .range button:last-child{border-right:0}
-#top .range button.on{background:var(--ink);color:#fff}
+.range{display:flex;gap:0;border:1px solid var(--hair);border-radius:8px;overflow:hidden}
+.range button{padding:6px 13px;font-size:12.5px;border:0;background:#fff;color:var(--mut);border-right:1px solid var(--hair)}
+.range button:last-child{border-right:0}
+.range button.on{background:var(--ink);color:#fff}
 #wrap{max-width:1240px;margin:0 auto;padding:20px 24px 60px}
 @media(max-width:900px){
   #top{position:sticky;top:0;width:100%;height:auto;bottom:auto;border-right:0;border-bottom:1px solid var(--hair)}
@@ -182,11 +182,11 @@ async function doLogin(){
 function boot(){document.getElementById('login').style.display='none';document.getElementById('app').style.display='block';load()}
 document.querySelectorAll('#top nav a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();curPanel=a.dataset.panel;
   document.querySelectorAll('#top nav a').forEach(x=>x.classList.remove('on'));a.classList.add('on');load()}));
-document.querySelectorAll('#top .range button').forEach(b=>b.addEventListener('click',()=>{
+document.querySelectorAll('#topbar2 .range button').forEach(b=>b.addEventListener('click',()=>{
   RANGE=b.dataset.r;
   document.getElementById('customBox').style.display = (RANGE==='custom')?'flex':'none';
-  if(RANGE==='custom'){ document.querySelectorAll('#top .range button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); return; }
-  document.querySelectorAll('#top .range button').forEach(x=>x.classList.remove('on'));b.classList.add('on');load()}));
+  if(RANGE==='custom'){ document.querySelectorAll('#topbar2 .range button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); return; }
+  document.querySelectorAll('#topbar2 .range button').forEach(x=>x.classList.remove('on'));b.classList.add('on');load()}));
 var CUST=null;
 async function applyCustom(){
   var f=document.getElementById('cFrom').value, t=document.getElementById('cTo').value;
