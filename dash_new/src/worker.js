@@ -110,8 +110,10 @@ async function handleDash(request, env, path, url){
       const sess=await q(env,`SELECT utm_campaign camp, COUNT(*) sessions, SUM(quiz_completed) qc, SUM(gate_completed) gc, SUM(jumped) j, SUM(outbound) outb, SUM(MIN(engaged_sec, CAST((last_ts-started_ts)/1000 AS INTEGER))) eng, SUM(max_scroll_pct) scr, SUM(pageviews) pv FROM session_summary WHERE started_ts>=? ${srcF} ${devF} GROUP BY utm_campaign`,since,...pf);
       // drill-down levels
       if(p.get('level')==='content'){
-        const camp=p.get('campaign')||'';
-        const rows=await q(env,`SELECT utm_content content, COUNT(*) sessions, SUM(quiz_completed) qc, SUM(jumped) j, SUM(outbound) outb, SUM(MIN(engaged_sec, CAST((last_ts-started_ts)/1000 AS INTEGER))) eng FROM session_summary WHERE started_ts>=? AND utm_campaign=? ${devF} GROUP BY utm_content ORDER BY sessions DESC`,since,camp,...(dev?[dev]:[]));
+        const campRaw=p.get('campaign')||'';
+        const camp=campRaw==='__NULL__'?'':campRaw;
+        const campF=campRaw==='__NULL__'?'AND (utm_campaign IS NULL OR utm_campaign=\'\')':'AND utm_campaign=?';
+        const rows=await q(env,`SELECT utm_content content, COUNT(*) sessions, SUM(quiz_completed) qc, SUM(jumped) j, SUM(outbound) outb, SUM(MIN(engaged_sec, CAST((last_ts-started_ts)/1000 AS INTEGER))) eng FROM session_summary WHERE started_ts>=? ${campF} ${devF} GROUP BY utm_content ORDER BY sessions DESC`,...(campRaw==='__NULL__'?[since,...(dev?[dev]:[])]:[since,camp,...(dev?[dev]:[])]));
         return csv?asCsv(rows):json({ok:true, panel, drill:'content', rows, range});
       }
       if(p.get('level')==='term'){

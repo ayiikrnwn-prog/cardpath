@@ -336,7 +336,11 @@ function v0(P,d){
   if(drillState){ return v0Drill(P,d); }
   var spend=d.spend||[], sess={};(d.sessions||[]).forEach(s=>sess[s.camp]=s);
   var camps={};spend.forEach(s=>{camps[s.utmc||s.camp]={spend:s.spend,clicks:s.clicks,impr:s.impr,platform:s.platform}});
-  Object.keys(sess).forEach(k=>{if(!camps[k])camps[k]={platform:'—'};camps[k].s=sess[k]});
+  Object.keys(sess).forEach(k=>{var label=(k==='null'||!k)?'(tanpa utm — direct/test)':k;
+    if(!camps[label])camps[label]={platform:'—',noSpend:true};
+    else if(camps[label].spend!==undefined && k!=='null' && k) camps[label].label=k;
+    camps[label].s=sess[k];
+    camps[label]._key=label;});
   // trend per campaign
   var tr={};(d.trend||[]).forEach(t=>{if(!tr[t.camp])tr[t.camp]=[];tr[t.camp].push(t.sessions)});
   var rows=Object.entries(camps).sort((a,b)=>(b[1].spend||0)-(a[1].spend||0));
@@ -347,14 +351,15 @@ function v0(P,d){
     body='<div style="overflow-x:auto"><table style="min-width:760px"><thead><tr><th>Campaign</th><th>Platform</th><th>Trend</th><th class="r">Spend '+chip('REAL','real')+'</th><th class="r">Clicks</th><th class="r">Sessions</th><th class="r">Quiz ✓</th><th class="r">Gate ✓</th><th class="r">Jumps</th><th class="r">Outbound</th><th class="r">Engaged</th><th class="r">NET '+chip('DERIVED','derived')+'</th></tr></thead><tbody>';
     rows.forEach(([k,v])=>{var s=v.s||{},rv=(d.derived||{})[k]||0,net=rv-(v.spend||0);
       v._net=net; v._spend=v.spend;
-      body+='<tr class="drillable" onclick="drill(\''+k+'\')"><td class="strong">'+k+' <span class="dl">›</span></td><td>'+v.platform+'</td><td>'+spark(tr[k])+'</td><td class="r">'+money(v._spend,d.currency)+'</td><td class="r">'+fmt(v.clicks)+'</td><td class="r">'+fmt(s.sessions)+'</td><td class="r">'+fmt(s.qc)+'</td><td class="r">'+fmt(s.gc)+'</td><td class="r">'+fmt(s.j)+'</td><td class="r">'+fmt(s.outb)+'</td><td class="r">'+(s.sessions?avg(s.eng,s.sessions)+'s':'—')+'</td><td class="r '+(net<0?'neg':'pos')+'">'+money(net,d.currency)+'</td></tr>'});
+      var disp=(v.label||k), isNoSpend=!!v.noSpend;
+    body+='<tr class="drillable" onclick="drill(\''+(v.label||k)+'\')"><td class="strong">'+disp+' <span class="dl">›</span>'+(isNoSpend?' <span class="chip derived" style="font-size:9px">traffic only</span>':'')+'</td><td>'+(v.platform||'—')+'</td><td>'+spark(tr[k])+'</td><td class="r">'+money(v._spend,d.currency)+'</td><td class="r">'+fmt(v.clicks)+'</td><td class="r">'+fmt(s.sessions)+'</td><td class="r">'+fmt(s.qc)+'</td><td class="r">'+fmt(s.gc)+'</td><td class="r">'+fmt(s.j)+'</td><td class="r">'+fmt(s.outb)+'</td><td class="r">'+(s.sessions?avg(s.eng,s.sessions)+'s':'—')+'</td><td class="r '+(net<0?'neg':'pos')+'">'+money(net,d.currency)+'</td></tr>'});
     body+='</tbody></table></div>';
   }
   P.innerHTML='<div class="panel">'+head+'<div class="body">'+body+'</div></div>';
 }
 async function drill(camp){
       drillState=camp;
-  var q='/api/dash/p0?level=content&campaign='+encodeURIComponent(camp);
+  var q='/api/dash/p0?level=content&campaign='+encodeURIComponent(camp==='(tanpa utm — direct/test)'?'__NULL__':camp);
   if(CUST){q+='&from='+CUST[0]+'&to='+CUST[1];} else {q+='&range='+RANGE;}
   var r=await fetch(q,{headers:{Authorization:'Bearer '+TOKEN}});
   var d=await r.json();
