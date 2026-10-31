@@ -151,7 +151,7 @@ export default {
     // ---------- /go/{card} redirect tracker ----------
     const goMatch = path.match(/^\/go\/([a-z0-9_]+)$/);
     if (goMatch) {
-      return handleGo(goMatch[1], url, env);
+      return handleGo(goMatch[1], url, request, env);
     }
 
     // ---------- Website Studio: artikel server-rendered ----------
@@ -640,7 +640,7 @@ async function handleEmail(request, env) {
   return json({ok:true});
 }
 
-async function handleGo(card, url, env) {
+async function handleGo(card, url, request, env) {
   const GO_TARGETS = {
     chime:'https://www.chime.com/', capone49:'https://www.capitalone.com/credit-cards/platinum-secured/',
     quicksilver:'https://www.capitalone.com/credit-cards/quicksilver-secured/',
