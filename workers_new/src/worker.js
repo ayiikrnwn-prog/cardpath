@@ -607,8 +607,17 @@ async function insertFunnelP(env, ev){
 }
 async function handleTrack(request, env) {
   let body; try { body = await request.json(); } catch(e) { return json({ok:false}, 400); }
-  const events = (body.batch && Array.isArray(body.batch)) ? body.batch : [body];
+  let events = (body.batch && Array.isArray(body.batch)) ? body.batch : [body];
+  // PERBAIKAN flood-guard: batch max 50; rate-limit per lid 100 events/menit (D1)
+  if (events.length > 50) events = events.slice(0, 50);
   let saved=0, rejected=0;
+  try {
+    const lid0 = (events.find(e=>e && e.lid) || {}).lid;
+    if (lid0) {
+      const rl = await env.DB.prepare("SELECT COUNT(*) c FROM funnel_events WHERE lid=? AND ts>?").bind(lid0, Date.now()-60000).first();
+      if (rl && rl.c > 100) return json({ok:false, error:'rate_limited'}, 429);
+    }
+  } catch(e) {}
   for (const ev of events) {
     let okF=false;
     try { okF = await insertFunnelP(env, ev) !== false; } catch(e){ console.log('if err', String(e).slice(0,120)); }
@@ -626,9 +635,27 @@ async function handleEmail(request, env) {
   let body; try { body = await request.json(); } catch(e) { return json({ok:false}, 400); }
   const em = (body.email||'').trim();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) return json({ok:false, error:'bad_email'}, 400);
+  // PERBAIKAN flood/dedup: satu lid = satu lead (update bila resubmit); rate-limit 5/10 menit
+  if (body.lid) {
+    try {
+      const rl = await env.DB.prepare("SELECT COUNT(*) c FROM leads WHERE lid=? AND ts>?").bind(body.lid, Date.now()-600000).first();
+      if (rl && rl.c >= 5) return json({ok:false, error:'rate_limited'}, 429);
+    } catch(e) {}
+  }
   try {
-    await env.DB.prepare('INSERT INTO leads (ts, lid, email, source, meta_json) VALUES (?,?,?,?,?)')
-      .bind(Date.now(), body.lid || null, em.toLowerCase(), 'quiz_gate', JSON.stringify({})).run();
+    if (body.lid) {
+      // app-level dedup: satu lid = satu lead (resubmit = update email terbaru)
+      const ex = await env.DB.prepare('SELECT id FROM leads WHERE lid=?').bind(body.lid).first();
+      if (ex) {
+        await env.DB.prepare('UPDATE leads SET ts=?, email=? WHERE id=?').bind(Date.now(), em.toLowerCase(), ex.id).run();
+      } else {
+        await env.DB.prepare('INSERT INTO leads (ts, lid, email, source, meta_json) VALUES (?,?,?,?,?)')
+          .bind(Date.now(), body.lid, em.toLowerCase(), 'quiz_gate', JSON.stringify({})).run();
+      }
+    } else {
+      await env.DB.prepare('INSERT INTO leads (ts, lid, email, source, meta_json) VALUES (?,?,?,?,?)')
+        .bind(Date.now(), null, em.toLowerCase(), 'quiz_gate', JSON.stringify({})).run();
+    }
   } catch(e) {}
   try {
     await env.DB.prepare(
