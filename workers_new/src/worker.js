@@ -629,6 +629,7 @@ async function handleEmail(request, env) {
     ).bind(Date.now(), body.lid || null, 'email_optin', 'sub1', '/start/quiz', null,
       JSON.stringify({email_domain: em.split('@')[1]})).run();
   } catch(e) {}
+  try { await trackSessionP(env, {event:'gate_completed', lid: body.lid||null, session_id: body.session_id||null}); } catch(e) {}
   return json({ok:true});
 }
 
