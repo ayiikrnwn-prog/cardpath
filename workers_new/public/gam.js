@@ -20,7 +20,12 @@
     var p = new URLSearchParams(location.search);
     var out = {};
     Object.keys(ALLOW).forEach(function (k) {
-      var v = p.get(k);
+      // URL param 'o' = odds (short param dari funnel) — map ke KV 'odds'
+      // short-param mapping (funnel kirim versi pendek): o→odds, m→cq_match, g→gated
+      var v = (k === 'odds') ? (p.get('odds') || p.get('o'))
+            : (k === 'cq_match') ? (p.get('cq_match') || p.get('m'))
+            : p.get(k);
+      if (k === 'cq_match' && !v) { try { var cc=JSON.parse(decodeURIComponent((document.cookie.match(/cp_cq=([^;]+)/)||[])[1]||'{}')); v=cc.cq_match; } catch(e){} }
       if (v && ALLOW[k].indexOf(v) !== -1) out[k] = v;
     });
     if (!out.utm_source) {
