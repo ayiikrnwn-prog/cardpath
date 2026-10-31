@@ -381,9 +381,10 @@ function scoreCandidate(k, a) {
 }
 
 function botCheck(payload) {
-  // S3: bot signals dari client telemetry + server timing
-  if (payload.elapsed_ms < 20000) return 'too_fast';           // total quiz <20s
+  // Director 30 Okt: bot = DUA syarat sekaligus — quiz <20s DAN total session <30s.
+  // (user mobile cepat-tap normal tidak lagi false-positive)
   if (payload.pattern_identical === true) return 'identical';
+  if ((payload.elapsed_ms|0) < 20000 && (payload.session_ms|0) < 30000) return 'too_fast';
   return null;
 }
 
@@ -444,13 +445,19 @@ async function handleQuizSubmit(request, env) {
     cq_dep: DEP_MAP[vals[5]] || String(vals[5]), cq_timing: vals[1], cq_regen: vals[0],
     lid: body.lid || 'cp_' + Date.now().toString(36), ts: Date.now() }, env);
 
-  // D1 log
-  try {
-    await env.DB.prepare(
-      'INSERT INTO funnel_events (ts, lid, event, sub, page, utm_source, meta_json) VALUES (?,?,?,?,?,?,?)'
-    ).bind(Date.now(), body.lid || null, 'quiz_complete', 'sub1', '/start/quiz',
-      body.utm_source || null, JSON.stringify({matched:m, odds:o, fit, intent, bot:isBot, contra:!!contra})).run();
-  } catch(e) { /* D1 belum setup — log jangan crash flow */ }
+  // D1 log — PERBAIKAN 3: wajib ber-lid & bawa utm lengkap; tanpa lid jangan catat anonim
+  if (body.lid) {
+    try {
+      const utm = body.utm||{};
+      await env.DB.prepare(
+        'INSERT INTO funnel_events (ts, lid, event, sub, page, utm_source, utm_campaign, utm_content, meta_json) VALUES (?,?,?,?,?,?,?,?,?)'
+      ).bind(Date.now(), body.lid, 'quiz_complete', 'sub1', '/start/quiz',
+        utm.utm_source || body.utm_source || null, utm.utm_campaign || null, utm.utm_content || null,
+        JSON.stringify({matched:m, odds:o, fit, intent, bot:isBot, contra:!!contra})).run();
+    } catch(e) {}
+    try { await trackSessionP(env, {event:'quiz_complete', lid: body.lid, session_id: body.session_id||null,
+      utm: body.utm||{}}); } catch(e) {}
+  }
   // v4.3.1: simpan token by lid (URL P1 bersih — token tidak lewat URL; verifikasi via /api/validate?lid=)
 
   // odds per kartu top3 (v4.3.2 — konsisten dgn farm)
@@ -650,13 +657,22 @@ async function handleGo(card, url, env) {
   const target = GO_TARGETS[card];
   if (!target) return new Response('Unknown card', {status:404});
   const p = url.searchParams;
-  try {
-    await env.DB.prepare(
-      'INSERT INTO funnel_events (ts, lid, event, sub, page, utm_source, meta_json) VALUES (?,?,?,?,?,?,?)'
-    ).bind(Date.now(), p.get('lid') || null, 'outbound_click', 'sub2', `/go/${card}`,
-      p.get('utm_source') || null,
-      JSON.stringify({card, m:p.get('cq_match')||'', o:p.get('o')||'', cp:p.get('cp')||''})).run();
-  } catch(e) {}
+  // PERBAIKAN 3: klik-keluar WAJIB ber-lid — fallback cookie cp_lid; jika tetap kosong, jangan catat
+  let goLid = p.get('lid') || null;
+  if (!goLid) {
+    const ck = (request.headers.get('Cookie')||'').match(/cp_lid=([^;]+)/);
+    if (ck) goLid = decodeURIComponent(ck[1]);
+  }
+  if (goLid) {
+    try {
+      await env.DB.prepare(
+        'INSERT INTO funnel_events (ts, lid, event, sub, page, utm_source, meta_json) VALUES (?,?,?,?,?,?,?)'
+      ).bind(Date.now(), goLid, 'outbound_click', 'sub2', `/go/${card}`,
+        p.get('utm_source') || null,
+        JSON.stringify({card, m:p.get('cq_match')||'', o:p.get('o')||'', cp:p.get('cp')||''})).run();
+    } catch(e) {}
+    try { await trackSessionP(env, {event:'outbound_click', lid: goLid, session_id:null}); } catch(e) {}
+  }
   return Response.redirect(target + (url.search ? '?' + url.searchParams.toString() : ''), 302);
 }
 

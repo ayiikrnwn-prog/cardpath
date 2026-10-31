@@ -422,6 +422,7 @@ function quizSubmitServer(hasEmail){
   const payload = {
     answers: a,
     elapsed_ms: Date.now() - Number(sessionStorage.getItem('cp_quiz_started_at')||Date.now()),
+    session_ms: Math.round(performance.now()),
     lid: getLid(),
     utm_source: getUtm().utm_source || null,
     calc_used: sessionStorage.getItem('cp_calc_used')==='1',
