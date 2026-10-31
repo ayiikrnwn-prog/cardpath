@@ -15,7 +15,7 @@ FUNNEL (first-party D1):
 - QuizStart : ~159 events
 - Quiz selesai (results) : 17 (29 Okt: 8, 30 Okt: 2*, 31 Okt: 7)
   *30 Okt rendah karena bot false-positive bug — SUDAH DIPERBAIKI 31 Okt
-- Email gate: 1 (belum ada lead real — test rows dibersihkan)
+- Email gate: 0 lead real sejauh ini (2 event email_optin = data test builder, sudah dibersihkan)
 - Jump ke SUB2: 0-1
 - Outbound click: 1 (dengan lid ✓)
 
