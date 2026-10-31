@@ -111,9 +111,14 @@ async function handleDash(request, env, path, url){
       // drill-down levels
       if(p.get('level')==='content'){
         const campRaw=p.get('campaign')||'';
-        const camp=campRaw==='__NULL__'?'':campRaw;
-        const campF=campRaw==='__NULL__'?'AND (utm_campaign IS NULL OR utm_campaign=\'\')':'AND utm_campaign=?';
-        const rows=await q(env,`SELECT utm_content content, COUNT(*) sessions, SUM(quiz_completed) qc, SUM(jumped) j, SUM(outbound) outb, SUM(MIN(engaged_sec, CAST((last_ts-started_ts)/1000 AS INTEGER))) eng FROM session_summary WHERE started_ts>=? ${campF} ${devF} GROUP BY utm_content ORDER BY sessions DESC`,...(campRaw==='__NULL__'?[since,...(dev?[dev]:[])]:[since,camp,...(dev?[dev]:[])]));
+        let campF,binds;
+        if(campRaw==='__NULL__'){ campF="AND (utm_campaign IS NULL OR utm_campaign='')"; binds=[since,...(dev?[dev]:[])]; }
+        else if(campRaw.startsWith('__MULTI__')){
+          const list=decodeURIComponent(campRaw.slice(9)).split(',');
+          campF='AND utm_campaign IN ('+list.map(()=>'?').join(',')+')'; binds=[since,...list,...(dev?[dev]:[])];
+        }
+        else { campF='AND utm_campaign=?'; binds=[since,campRaw,...(dev?[dev]:[])]; }
+        const rows=await q(env,`SELECT utm_content content, COUNT(*) sessions, SUM(quiz_completed) qc, SUM(jumped) j, SUM(outbound) outb, SUM(MIN(engaged_sec, CAST((last_ts-started_ts)/1000 AS INTEGER))) eng FROM session_summary WHERE started_ts>=? ${campF} ${devF} GROUP BY utm_content ORDER BY sessions DESC`,...binds);
         return csv?asCsv(rows):json({ok:true, panel, drill:'content', rows, range});
       }
       if(p.get('level')==='term'){
@@ -142,7 +147,8 @@ async function handleDash(request, env, path, url){
       }catch(e){}
       // daily trend per top campaign (sparkline source)
       const trend=await q(env,`SELECT date(started_ts/1000,'unixepoch') day, utm_campaign camp, COUNT(*) sessions, SUM(outbound) outb FROM session_summary WHERE started_ts>=? GROUP BY day, utm_campaign ORDER BY day`,since);
-      return csv?asCsv([...spend.map(s=>({type:'spend',...s})),...sess.map(s=>({type:'session',...s}))]):json({ok:true, panel, spend, sessions:sess, trend, derived, leads, currency:cur, range});
+      let cmap=[]; try{ cmap=await q(env,'SELECT campaign_id, utm_campaign FROM platform_campaign_map'); }catch(e){}
+      return csv?asCsv([...spend.map(s=>({type:'spend',...s})),...sess.map(s=>({type:'session',...s}))]):json({ok:true, panel, spend, sessions:sess, trend, derived, leads, cmap, currency:cur, range});
     }
     if(panel==='p1'){ // cohort matrix + fit/intent histogram
       const camp=p.get('campaign')||''; const campF=camp?' AND utm_campaign=?':'';

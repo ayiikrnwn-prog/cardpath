@@ -335,12 +335,31 @@ function spark(series){ // series of numbers → svg
 function v0(P,d){
   if(drillState){ return v0Drill(P,d); }
   var spend=d.spend||[], sess={};(d.sessions||[]).forEach(s=>sess[s.camp]=s);
-  var camps={};spend.forEach(s=>{camps[s.utmc||s.camp]={spend:s.spend,clicks:s.clicks,impr:s.impr,platform:s.platform}});
-  Object.keys(sess).forEach(k=>{var label=(k==='null'||!k)?'(tanpa utm — direct/test)':k;
-    if(!camps[label])camps[label]={platform:'—',noSpend:true};
-    else if(camps[label].spend!==undefined && k!=='null' && k) camps[label].label=k;
-    camps[label].s=sess[k];
-    camps[label]._key=label;});
+  // PAID rows: satu baris per campaign platform (nama resmi). Kumpulkan utm utk drill.
+  var camps={};var utmOf={};
+  var idName={};
+  spend.forEach(s=>{
+    var name=s.camp||s.utmc||s.platform;
+    idName[s.camp]=name;
+    if(!camps[name]) camps[name]={spend:0,clicks:0,impr:0,platform:s.platform,utms:[]};
+    camps[name].spend+=s.spend; camps[name].clicks+=s.clicks; camps[name].impr+=s.impr;
+    if(s.utmc && camps[name].utms.indexOf(s.utmc)<0) camps[name].utms.push(s.utmc);
+  });
+  (d.cmap||[]).forEach(m=>{ var n=idName[m.campaign_id]; if(n) utmOf[m.utm_campaign]=n; });
+  // fallback: utm yang dibawa spend tapi tak ter-mapping resmi → klaim campaign spend pertama
+  spend.forEach(s=>{ if(s.utmc && !utmOf[s.utmc]) utmOf[s.utmc]=idName[s.camp]||s.utmc; });
+  // TRAFFIC rows: klaim utm oleh paid bila terdaftar, sisanya klasifikasi manual
+  Object.keys(sess).forEach(k=>{
+    var v=(k && utmOf[k]) ? camps[utmOf[k]] : null;
+    if(v){ v.s=v.s||{sessions:0,qc:0,gc:0,j:0,outb:0,eng:0,scr:0,pv:0};
+      var t=sess[k]; v.s.sessions+=t.sessions; v.s.qc+=t.qc; v.s.gc+=t.gc; v.s.j+=t.j; v.s.outb+=t.outb;
+      v.s.eng+=t.eng; v.s.scr+=t.scr; v.s.pv+=t.pv;
+    } else {
+      var label = (!k||k==='null') ? 'direct' : (/^(gate_check|test|qa|qa-|check)/i.test(k) ? 'test: '+k : 'unpaid: '+k);
+      if(!camps[label]) camps[label]={platform:'—',noSpend:true,_key:k};
+      camps[label].s=sess[k];
+    }
+  });
   // trend per campaign
   var tr={};(d.trend||[]).forEach(t=>{if(!tr[t.camp])tr[t.camp]=[];tr[t.camp].push(t.sessions)});
   var rows=Object.entries(camps).sort((a,b)=>(b[1].spend||0)-(a[1].spend||0));
@@ -351,22 +370,26 @@ function v0(P,d){
     body='<div style="overflow-x:auto"><table style="min-width:760px"><thead><tr><th>Campaign</th><th>Platform</th><th>Trend</th><th class="r">Spend '+chip('REAL','real')+'</th><th class="r">Clicks</th><th class="r">Sessions</th><th class="r">Quiz ✓</th><th class="r">Gate ✓</th><th class="r">Jumps</th><th class="r">Outbound</th><th class="r">Engaged</th><th class="r">NET '+chip('DERIVED','derived')+'</th></tr></thead><tbody>';
     rows.forEach(([k,v])=>{var s=v.s||{},rv=(d.derived||{})[k]||0,net=rv-(v.spend||0);
       v._net=net; v._spend=v.spend;
-      var disp=(v.label||k), isNoSpend=!!v.noSpend;
-    body+='<tr class="drillable" onclick="drill(\''+(v.label||k)+'\')"><td class="strong">'+disp+' <span class="dl">›</span>'+(isNoSpend?' <span class="chip derived" style="font-size:9px">traffic only</span>':'')+'</td><td>'+(v.platform||'—')+'</td><td>'+spark(tr[k])+'</td><td class="r">'+money(v._spend,d.currency)+'</td><td class="r">'+fmt(v.clicks)+'</td><td class="r">'+fmt(s.sessions)+'</td><td class="r">'+fmt(s.qc)+'</td><td class="r">'+fmt(s.gc)+'</td><td class="r">'+fmt(s.j)+'</td><td class="r">'+fmt(s.outb)+'</td><td class="r">'+(s.sessions?avg(s.eng,s.sessions)+'s':'—')+'</td><td class="r '+(net<0?'neg':'pos')+'">'+money(net,d.currency)+'</td></tr>'});
+      var disp=k, isNoSpend=!!v.noSpend;
+    var subUtm=(v.utms&&v.utms.length)?'<div style="font-size:10px;color:var(--faint);font-family:var(--mono);margin-top:2px">utm: '+v.utms.join(', ')+'</div>':'';
+    var drillKey=isNoSpend?(v._key||'__NULL__'):(v.utms&&v.utms[0]||k);
+    if(!isNoSpend) drillKey='__MULTI__'+encodeURIComponent(v.utms.join(','));
+    body+='<tr class="drillable" onclick="drill(\''+drillKey+'\')"><td class="strong">'+disp+' <span class="dl">›</span>'+subUtm+(isNoSpend?' <span class="chip derived" style="font-size:9px">'+(isNoSpend?'non-paid':'')+'</span>':'')+'</td><td>'+(v.platform||'—')+'</td><td>'+spark(tr[k])+'</td><td class="r">'+money(v._spend,d.currency)+'</td><td class="r">'+fmt(v.clicks)+'</td><td class="r">'+fmt(s.sessions)+'</td><td class="r">'+fmt(s.qc)+'</td><td class="r">'+fmt(s.gc)+'</td><td class="r">'+fmt(s.j)+'</td><td class="r">'+fmt(s.outb)+'</td><td class="r">'+(s.sessions?avg(s.eng,s.sessions)+'s':'—')+'</td><td class="r '+(net<0?'neg':'pos')+'">'+money(net,d.currency)+'</td></tr>'});
     body+='</tbody></table></div>';
   }
   P.innerHTML='<div class="panel">'+head+'<div class="body">'+body+'</div></div>';
 }
 async function drill(camp){
       drillState=camp;
-  var q='/api/dash/p0?level=content&campaign='+encodeURIComponent(camp==='(tanpa utm — direct/test)'?'__NULL__':camp);
+  var q='/api/dash/p0?level=content&campaign='+encodeURIComponent(camp);
   if(CUST){q+='&from='+CUST[0]+'&to='+CUST[1];} else {q+='&range='+RANGE;}
   var r=await fetch(q,{headers:{Authorization:'Bearer '+TOKEN}});
   var d=await r.json();
   var rows=(d.rows||[]).map(x=>{var net='';
     return '<tr><td class="strong">'+(x.content||'(none)')+'</td><td class="r">'+fmt(x.sessions)+'</td><td class="r">'+fmt(x.qc)+'</td><td class="r">'+fmt(x.j)+'</td><td class="r">'+fmt(x.outb)+'</td><td class="r">'+(x.sessions?avg(x.eng,x.sessions)+'s':'—')+'</td></tr>'}).join('');
   var note=camp==='CARDPATH-META-METAA'?'<div class="note" style="padding:8px 14px">utm_content = penanda adset: as1/as2 = adset 1/2 (lihat setup Meta Ads). sas = sitelink/kontrol.</div>':'';
-  document.getElementById('panels').innerHTML='<div class="panel"><div class="crumb"><a href="#" onclick="drillBack(event)">← Campaigns</a> › <b>'+camp+'</b> — breakdown per ad group (utm_content)</div>'+note+'<div class="body">'+
+  var crumbName=camp.startsWith('__MULTI__')?decodeURIComponent(camp.slice(9)).split(',').join(' + '):camp;
+document.getElementById('panels').innerHTML='<div class="panel"><div class="crumb"><a href="#" onclick="drillBack(event)">← Campaigns</a> › <b>'+crumbName+'</b> — breakdown per ad group (utm_content)</div>'+note+'<div class="body">'+
     (rows?'<div style="overflow-x:auto"><table style="min-width:640px"><thead><tr><th>Ad Group (utm_content)</th><th class="r">Sessions</th><th class="r">Quiz ✓</th><th class="r">Jumps</th><th class="r">Outbound</th><th class="r">Engaged</th></tr></thead><tbody>'+rows+'</tbody></table></div>':emptyBox('No sessions for this campaign yet.'))+'</div></div>';
 }
 function drillBack(e){e.preventDefault();drillState=null;load()}
