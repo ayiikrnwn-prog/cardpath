@@ -29,7 +29,7 @@ BAGIAN 2 — PERFORMA PER ADSET (7 hari, sumber D1)
 ================================================================
 
 ADSET    | SESSIONS | QUIZ | QUIZ RATE | ENGAGED
-as3      |    21    |  8   |  38%  🌟  | 638s total
+as3      |    19    |  6   |  32%  🌟  | (test rows excluded)
 as4      |    40    |  4   |  10%      | 635s total
 as1      |    43    |  1   |   2%      | 191s total
 as2      |    37    |  0   |   0%      | 113s total
@@ -40,7 +40,7 @@ v2as2    |    23    |  0   |   0%      | 110s total
 DEVICE: mobile 89 (57%) / desktop 67 (43%) — dua-duanya signifikan
 
 INSIGHT:
-- as3 = bintang: quiz rate 38%, engaged tertinggi (638s)
+- as3 = bintang: quiz rate 32% (6/19), engaged tertinggi
 - as1+as2+as3-as4 pattern: engaged rendah (113-191s) = creative-audience mismatch
 - v2as1/v2as2: 45 sesi NOL quiz — perlu evaluasi setelah utm dipisah
 
@@ -57,7 +57,7 @@ Setelah diganti, kabari builder → mapping di-update 1 menit → dashboard
 langsung menampilkan V2-LPV sebagai baris terpisah.
 
 🔴 #2 — REALOKASI BUDGET ADSET
-as1+as2 = 80 sesi, 1 quiz total. as3 = 21 sesi, 8 quiz.
+as1+as2 = 80 sesi, 1 quiz total. as3 = 19 sesi, 6 quiz.
 ACTION: pause/turunkan as1+as2 → realokasi ke as3 (duplikat as3 dengan
 budget lebih besar adalah langkah paling logis sekarang).
 
