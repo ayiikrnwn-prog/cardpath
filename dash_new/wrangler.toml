@@ -13,8 +13,5 @@ binding = "DB"
 database_name = "cardpath-db"
 database_id = "da3ce6ac-2216-413d-a174-6fd64a69392c"
 
-[triggers]
-crons = ["0 * * * *"]
-
 [vars]
 CP_ENV = "production"
