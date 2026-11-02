@@ -47,6 +47,13 @@ function applyLidCookie(headers, url) {
 
 export default {
   async fetch(request, env, ctx) {
+    const __resp = await __handle(request, env, ctx);
+    try { __resp.headers.set('X-CPV', '63f'); } catch(e) {}
+    return __resp;
+  }
+};
+
+async function __handle(request, env, ctx) {
     const url = new URL(request.url);
     // C1b: page rule zone me-redirect /start/* → /sub1/* (di luar worker). Worker menangani
     // KEDUA bentuk: path /sub1/start/* dipetakan ke sub1Path yang sama tanpa redirect ganda.
@@ -112,7 +119,13 @@ export default {
         else if (sub1Path.split('/').pop()) sub1Path += '.html';
       }
       if (sub1Path === '/sub1/start.html') sub1Path = '/sub1/start/index.html'; // /start → index
-      const assetResp = await env.ASSETS.fetch(new URL(sub1Path + (url.search||''), url.origin), request);
+      // FIX PRETTY-URL LOOP: env.ASSETS me-redirect '/x.html' → '/x' (307). Fetch pakai
+      // canonical TANPA .html untuk file .html di bawah /sub1/start/ — ASSETS tetap serve
+      // file-nya (200, tanpa redirect-loop):
+      const __assetPath = (sub1Path.endsWith('.html') && sub1Path.startsWith('/sub1/start/'))
+        ? sub1Path.slice(0, -5)
+        : sub1Path;
+      const assetResp = await env.ASSETS.fetch(new URL(__assetPath + (url.search||''), url.origin), request);
       if (assetResp.status !== 404) {
         const __ct2 = assetResp.headers.get('Content-Type')||'';
         if (__ct2.includes('text/html')) {
@@ -304,7 +317,6 @@ export default {
     }
     return assetResp;
   }
-};
 
 // ===== AD IMPRESSION TELEMETRY (GPT slotRenderEnded -> D1) =====
 async function handleAdlog(request, env) {
