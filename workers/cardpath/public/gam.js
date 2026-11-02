@@ -20,7 +20,12 @@
     var p = new URLSearchParams(location.search);
     var out = {};
     Object.keys(ALLOW).forEach(function (k) {
-      var v = p.get(k);
+      // URL param 'o' = odds (short param dari funnel) — map ke KV 'odds'
+      // short-param mapping (funnel kirim versi pendek): o→odds, m→cq_match, g→gated
+      var v = (k === 'odds') ? (p.get('odds') || p.get('o'))
+            : (k === 'cq_match') ? (p.get('cq_match') || p.get('m'))
+            : p.get(k);
+      if (k === 'cq_match' && !v) { try { var cc=JSON.parse(decodeURIComponent((document.cookie.match(/cp_cq=([^;]+)/)||[])[1]||'{}')); v=cc.cq_match; } catch(e){} }
       if (v && ALLOW[k].indexOf(v) !== -1) out[k] = v;
     });
     if (!out.utm_source) {
@@ -109,7 +114,18 @@
 
       g.enableServices();
       if (window.CP_SLOTS && window.CP_SLOTS.length) {
-        window.CP_SLOTS.forEach(function (s) { var el=document.getElementById(s.id); if (el) g.display(s.id); });
+        window.CP_SLOTS.forEach(function (s) {
+          var el=document.getElementById(s.id); if (!el) return;
+          if (s.pos === 'carousel') {
+            // Task 3: lazy — display saat zone visible (IntersectionObserver)
+            try {
+              var io = new IntersectionObserver(function (ents) {
+                ents.forEach(function (en) { if (en.isIntersecting) { io.disconnect(); g.display(s.id); } });
+              }, { threshold: 0.3 });
+              io.observe(el);
+            } catch (e) { g.display(s.id); }
+          } else { g.display(s.id); }
+        });
       }
       if (document.getElementById('cp-ad-top')) g.display('cp-ad-top');
     });
@@ -122,3 +138,60 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initGPT);
   else initGPT();
 })();
+
+/* v3: interstitial on-demand (Task 1 PEKAN1) — overlay transisi quiz→result
+ * API: window.cpInterstitialShow(onDone) — fire-and-forget; onDone SELALU dipanggil.
+ * Batasan: 1x per session, max 15s, close selalu tersedia, fallback 3s no-fill.
+ * Policy: quiz page TIDAK pernah memanggil ini. */
+window.cpInterstitialShow = function (onDone) {
+  var UNIT_INT = '/23382571087/cardpath/cardpath_interstitial';
+  var done = false, slot = null, timer15 = null, timer3 = null, g = window.googletag;
+  function finish(reason) {
+    if (done) return; done = true;
+    try { clearTimeout(timer15); clearTimeout(timer3); } catch (e) {}
+    try { if (slot) g.destroySlots([slot]); } catch (e) {}
+    var ov = document.getElementById('cp-int-overlay');
+    if (ov) ov.remove();
+    logImpressionSafe('interstitial_onsite', reason);
+    if (typeof onDone === 'function') setTimeout(onDone, 0);
+  }
+  function logImpressionSafe(name, reason) {
+    try {
+      fetch('/api/adlog', { method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+        body: JSON.stringify({ events: [{ page: 'result_transition', slot: name, kv_json: JSON.stringify(KVS),
+          lid: new URLSearchParams(location.search).get('lid') || '', ev: reason, meta_json: '{}' }] }) }).catch(function () {});
+    } catch (e) {}
+  }
+  // 1x per session guard
+  try { if (sessionStorage.getItem('cp_int_done') === '1') { finish('already_shown'); return; } } catch (e) { finish('storage_err'); return; }
+  if (!g || !g.cmd) { finish('no_gpt'); return; }
+  // overlay
+  var ov = document.createElement('div');
+  ov.id = 'cp-int-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,system-ui,sans-serif';
+  ov.innerHTML = '<div style="text-align:center;max-width:336px;width:100%;padding:16px">' +
+    '<div style="font-size:15px;color:#555;margin-bottom:14px">Checking your matches…</div>' +
+    '<div id="cp-int-ad" style="min-height:250px;text-align:center"></div>' +
+    '<div style="margin-top:16px"><button id="cp-int-close" style="background:none;border:1.5px solid #ccc;border-radius:20px;padding:8px 18px;font-size:14px;color:#666">Skip</button></div>' +
+    '</div>';
+  document.body.appendChild(ov);
+  document.getElementById('cp-int-close').onclick = function () { finish('user_skip'); };
+  try { sessionStorage.setItem('cp_int_done', '1'); } catch (e) {}
+  // timeouts: 3s no-fill → close; 15s hard cap
+  timer3 = setTimeout(function () { if (!window.__cpIntFilled) finish('no_fill_3s'); }, 3000);
+  timer15 = setTimeout(function () { finish('timeout_15s'); }, 15000);
+  g.cmd.push(function () {
+    try {
+      slot = g.defineSlot(UNIT_INT, [[320, 480], [300, 250], [336, 280]], 'cp-int-ad');
+      if (!slot) { finish('define_failed'); return; }
+      slot.addService(g.pubads());
+      slot.setTargeting('placement', 'interstitial');
+      g.pubads().addEventListener('slotRenderEnded', function intRE(e) {
+        if (e.slot !== slot) return;
+        g.pubads().removeEventListener('slotRenderEnded', intRE);
+        if (e.isEmpty) { finish('empty'); } else { window.__cpIntFilled = true; clearTimeout(timer3); logImpressionSafe('interstitial_onsite', 'rendered'); }
+      });
+      g.display('cp-int-ad');
+    } catch (e) { finish('error'); }
+  });
+};

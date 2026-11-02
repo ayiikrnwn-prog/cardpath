@@ -41,9 +41,29 @@ export default {
     if (__ct.includes('text/html') && request.method === 'GET') {
       let __html = await assetResp.text();
       if (!__html.includes('track.js')) __html = __html.replace('</head>', '<script src="/track.js" defer></script></head>');
+      // PEKAN1 Task 1-3: gam.js di result page (interstitial + native + carousel); quiz tetap 0 iklan
+      const __p = new URL(request.url).pathname;
+      if (__p.endsWith('/start/result') || __p.endsWith('/start/result.html')) {
+        if (!__html.includes('gam.js')) {
+          let s1cfg=[];
+          try {
+            if (!globalThis.__cpSlotsCache || Date.now()-globalThis.__cpSlotsCache.ts > 60000) {
+              const rr = await env.DB.prepare('SELECT * FROM ad_slots WHERE enabled=1').all();
+              globalThis.__cpSlotsCache = { ts: Date.now(), slots: rr.results||[] };
+            }
+            s1cfg = (globalThis.__cpSlotsCache.slots||[]).filter(s=>['cardpath_result_native','cardpath_carousel_native'].includes(s.slot_id))
+              .map(s=>({ id: s.slot_id==='cardpath_carousel_native' ? 'cp-ad-carousel' : 'cp-ad-native',
+                unit:s.unit_path, sizes:JSON.parse(s.sizes_json||'[]'),
+                pos: s.slot_id==='cardpath_carousel_native' ? 'carousel' : 'native' }));
+          } catch(e) {}
+          const cfgTag1 = '<script>window.CP_SLOTS='+JSON.stringify(s1cfg)+'</scr'+'ipt>';
+          __html = __html.replace('</body>', cfgTag1 + '<script src="/gam.js" defer></scr'+'ipt></body>');
+        }
+      }
       const __r2 = new Response(__html, assetResp);
       __r2.headers.set('Content-Type','text/html; charset=utf-8');
       __r2.headers.delete('Content-Length');
+      __r2.headers.set('Cache-Control','no-store');
       return __r2;
     }
     return env.ASSETS.fetch(request);
