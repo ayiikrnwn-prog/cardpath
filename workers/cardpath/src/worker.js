@@ -151,7 +151,7 @@ export default {
     // ---------- /go/{card} redirect tracker ----------
     const goMatch = path.match(/^\/go\/([a-z0-9_]+)$/);
     if (goMatch) {
-      return handleGo(goMatch[1], url, env);
+      return handleGo(goMatch[1], url, request, env);
     }
 
     // ---------- Website Studio: artikel server-rendered ----------
@@ -381,9 +381,10 @@ function scoreCandidate(k, a) {
 }
 
 function botCheck(payload) {
-  // S3: bot signals dari client telemetry + server timing
-  if (payload.elapsed_ms < 20000) return 'too_fast';           // total quiz <20s
+  // Director 30 Okt: bot = DUA syarat sekaligus — quiz <20s DAN total session <30s.
+  // (user mobile cepat-tap normal tidak lagi false-positive)
   if (payload.pattern_identical === true) return 'identical';
+  if ((payload.elapsed_ms|0) < 20000 && (payload.session_ms|0) < 30000) return 'too_fast';
   return null;
 }
 
@@ -444,13 +445,19 @@ async function handleQuizSubmit(request, env) {
     cq_dep: DEP_MAP[vals[5]] || String(vals[5]), cq_timing: vals[1], cq_regen: vals[0],
     lid: body.lid || 'cp_' + Date.now().toString(36), ts: Date.now() }, env);
 
-  // D1 log
-  try {
-    await env.DB.prepare(
-      'INSERT INTO funnel_events (ts, lid, event, sub, page, utm_source, meta_json) VALUES (?,?,?,?,?,?,?)'
-    ).bind(Date.now(), body.lid || null, 'quiz_complete', 'sub1', '/start/quiz',
-      body.utm_source || null, JSON.stringify({matched:m, odds:o, fit, intent, bot:isBot, contra:!!contra})).run();
-  } catch(e) { /* D1 belum setup — log jangan crash flow */ }
+  // D1 log — PERBAIKAN 3: wajib ber-lid & bawa utm lengkap; tanpa lid jangan catat anonim
+  if (body.lid) {
+    try {
+      const utm = body.utm||{};
+      await env.DB.prepare(
+        'INSERT INTO funnel_events (ts, lid, event, sub, page, utm_source, utm_campaign, utm_content, meta_json) VALUES (?,?,?,?,?,?,?,?,?)'
+      ).bind(Date.now(), body.lid, 'quiz_complete', 'sub1', '/start/quiz',
+        utm.utm_source || body.utm_source || null, utm.utm_campaign || null, utm.utm_content || null,
+        JSON.stringify({matched:m, odds:o, fit, intent, bot:isBot, contra:!!contra})).run();
+    } catch(e) {}
+    try { await trackSessionP(env, {event:'quiz_complete', lid: body.lid, session_id: body.session_id||null,
+      utm: body.utm||{}}); } catch(e) {}
+  }
   // v4.3.1: simpan token by lid (URL P1 bersih — token tidak lewat URL; verifikasi via /api/validate?lid=)
 
   // odds per kartu top3 (v4.3.2 — konsisten dgn farm)
@@ -537,7 +544,12 @@ async function handleValidate(request, env) {
 }
 
 async function trackSessionP(env, ev){
-  const sid=ev.session_id; if(!sid) return;
+  let sid=ev.session_id;
+  // FIX: event tanpa session_id (app.js lama) → fallback cari session aktif terakhir by lid
+  if(!sid && ev.lid){
+    try { const r=await env.DB.prepare('SELECT session_id FROM session_summary WHERE lid=? ORDER BY started_ts DESC LIMIT 1').bind(ev.lid).first(); if(r) sid=r.session_id; } catch(e){}
+  }
+  if(!sid) return;
   const utm=ev.utm||{};
   if(ev.event==='session_start'){
     await env.DB.prepare('INSERT INTO session_summary (session_id, lid, utm_source, utm_campaign, utm_content, device, country, gclid, started_ts, last_ts, pageviews) VALUES (?,?,?,?,?,?,?,?,?,?,1) ON CONFLICT(session_id) DO NOTHING')
@@ -595,8 +607,17 @@ async function insertFunnelP(env, ev){
 }
 async function handleTrack(request, env) {
   let body; try { body = await request.json(); } catch(e) { return json({ok:false}, 400); }
-  const events = (body.batch && Array.isArray(body.batch)) ? body.batch : [body];
+  let events = (body.batch && Array.isArray(body.batch)) ? body.batch : [body];
+  // PERBAIKAN flood-guard: batch max 50; rate-limit per lid 100 events/menit (D1)
+  if (events.length > 50) events = events.slice(0, 50);
   let saved=0, rejected=0;
+  try {
+    const lid0 = (events.find(e=>e && e.lid) || {}).lid;
+    if (lid0) {
+      const rl = await env.DB.prepare("SELECT COUNT(*) c FROM funnel_events WHERE lid=? AND ts>?").bind(lid0, Date.now()-60000).first();
+      if (rl && rl.c > 100) return json({ok:false, error:'rate_limited'}, 429);
+    }
+  } catch(e) {}
   for (const ev of events) {
     let okF=false;
     try { okF = await insertFunnelP(env, ev) !== false; } catch(e){ console.log('if err', String(e).slice(0,120)); }
@@ -614,9 +635,27 @@ async function handleEmail(request, env) {
   let body; try { body = await request.json(); } catch(e) { return json({ok:false}, 400); }
   const em = (body.email||'').trim();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) return json({ok:false, error:'bad_email'}, 400);
+  // PERBAIKAN flood/dedup: satu lid = satu lead (update bila resubmit); rate-limit 5/10 menit
+  if (body.lid) {
+    try {
+      const rl = await env.DB.prepare("SELECT COUNT(*) c FROM leads WHERE lid=? AND ts>?").bind(body.lid, Date.now()-600000).first();
+      if (rl && rl.c >= 5) return json({ok:false, error:'rate_limited'}, 429);
+    } catch(e) {}
+  }
   try {
-    await env.DB.prepare('INSERT INTO leads (ts, lid, email, source, meta_json) VALUES (?,?,?,?,?)')
-      .bind(Date.now(), body.lid || null, em.toLowerCase(), 'quiz_gate', JSON.stringify({})).run();
+    if (body.lid) {
+      // app-level dedup: satu lid = satu lead (resubmit = update email terbaru)
+      const ex = await env.DB.prepare('SELECT id FROM leads WHERE lid=?').bind(body.lid).first();
+      if (ex) {
+        await env.DB.prepare('UPDATE leads SET ts=?, email=? WHERE id=?').bind(Date.now(), em.toLowerCase(), ex.id).run();
+      } else {
+        await env.DB.prepare('INSERT INTO leads (ts, lid, email, source, meta_json) VALUES (?,?,?,?,?)')
+          .bind(Date.now(), body.lid, em.toLowerCase(), 'quiz_gate', JSON.stringify({})).run();
+      }
+    } else {
+      await env.DB.prepare('INSERT INTO leads (ts, lid, email, source, meta_json) VALUES (?,?,?,?,?)')
+        .bind(Date.now(), null, em.toLowerCase(), 'quiz_gate', JSON.stringify({})).run();
+    }
   } catch(e) {}
   try {
     await env.DB.prepare(
@@ -624,10 +663,11 @@ async function handleEmail(request, env) {
     ).bind(Date.now(), body.lid || null, 'email_optin', 'sub1', '/start/quiz', null,
       JSON.stringify({email_domain: em.split('@')[1]})).run();
   } catch(e) {}
+  try { await trackSessionP(env, {event:'gate_completed', lid: body.lid||null, session_id: body.session_id||null}); } catch(e) {}
   return json({ok:true});
 }
 
-async function handleGo(card, url, env) {
+async function handleGo(card, url, request, env) {
   const GO_TARGETS = {
     chime:'https://www.chime.com/', capone49:'https://www.capitalone.com/credit-cards/platinum-secured/',
     quicksilver:'https://www.capitalone.com/credit-cards/quicksilver-secured/',
@@ -644,13 +684,22 @@ async function handleGo(card, url, env) {
   const target = GO_TARGETS[card];
   if (!target) return new Response('Unknown card', {status:404});
   const p = url.searchParams;
-  try {
-    await env.DB.prepare(
-      'INSERT INTO funnel_events (ts, lid, event, sub, page, utm_source, meta_json) VALUES (?,?,?,?,?,?,?)'
-    ).bind(Date.now(), p.get('lid') || null, 'outbound_click', 'sub2', `/go/${card}`,
-      p.get('utm_source') || null,
-      JSON.stringify({card, m:p.get('cq_match')||'', o:p.get('o')||'', cp:p.get('cp')||''})).run();
-  } catch(e) {}
+  // PERBAIKAN 3: klik-keluar WAJIB ber-lid — fallback cookie cp_lid; jika tetap kosong, jangan catat
+  let goLid = p.get('lid') || null;
+  if (!goLid) {
+    const ck = (request.headers.get('Cookie')||'').match(/cp_lid=([^;]+)/);
+    if (ck) goLid = decodeURIComponent(ck[1]);
+  }
+  if (goLid) {
+    try {
+      await env.DB.prepare(
+        'INSERT INTO funnel_events (ts, lid, event, sub, page, utm_source, meta_json) VALUES (?,?,?,?,?,?,?)'
+      ).bind(Date.now(), goLid, 'outbound_click', 'sub2', `/go/${card}`,
+        p.get('utm_source') || null,
+        JSON.stringify({card, m:p.get('cq_match')||'', o:p.get('o')||'', cp:p.get('cp')||''})).run();
+    } catch(e) {}
+    try { await trackSessionP(env, {event:'outbound_click', lid: goLid, session_id:null}); } catch(e) {}
+  }
   return Response.redirect(target + (url.search ? '?' + url.searchParams.toString() : ''), 302);
 }
 

@@ -23,15 +23,22 @@
   var utm = getUtm() || {};
   var src = utm.utm_source || (new URLSearchParams(location.search).get('utm_source')) || '';
   var lid = getLid();
-  // polling kecil: kalau cp_lid belum ter-set (race dengan app.js defer), tunggu hingga 500ms
-  if (!lid) {
-    for (var i=0;i<5;i++){ /* sync wait tidak ada — pakai flag & re-fire approach di bawah */ }
+  // A. QuizStart — per browser session (sessionStorage), dedup via eventID = qs_<lid> (match CAPI)
+  function fireQuizStart(l){
+    var fbFlag = 'cp_fbqs_session';
+    try { if (sessionStorage.getItem(fbFlag)) return; } catch(e){}
+    fbq('trackCustom', 'QuizStart', { lid: l, utm_source: src }, { eventID: 'qs_' + l });
+    try { sessionStorage.setItem(fbFlag, '1'); } catch(e){}
   }
-  // A. QuizStart — 1x per lid, SEMUA traffic
-  var fbFlag = 'cp_fbqs_' + lid;
-  if (lid && !localStorage.getItem(fbFlag)) {
-    fbq('trackCustom', 'QuizStart', { lid: lid, utm_source: src });
-    try { localStorage.setItem(fbFlag, '1'); } catch(e){}
+  if (lid) { fireQuizStart(lid); }
+  else {
+    // F3 fix: poll cp_lid max 2 detik (app.js race), lalu fire sekali
+    var tries = 0;
+    var t = setInterval(function(){
+      var l2 = getLid();
+      if (l2) { clearInterval(t); fireQuizStart(l2); }
+      else if (++tries >= 20) { clearInterval(t); }
+    }, 100);
   }
   // B. GTag conversion — HANYA utm_source gcl*
   var GT = CFG.gtagId, GL = CFG.gtagLabel;
