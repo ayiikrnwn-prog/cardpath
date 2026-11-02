@@ -93,6 +93,12 @@ export default {
     }
 
     // ---------- Opsi A: quiz flow = SUB1 ----------
+    // C1b: normalisasi jalur legacy /sub1/* → canonical /start/* (biar SEMUA result/quiz
+    // dilayani blok card.* yang inject gam.js — tidak ada jalur yatim)
+    if (url.hostname.startsWith('card.') && path.startsWith('/sub1/')) {
+      const canon = path.replace(/^\/sub1/, '');
+      return Response.redirect('https://card.seputar-ntt.com' + canon + (url.search ? '?' + url.searchParams.toString() : ''), 301);
+    }
     if (path.startsWith('/start/')) {
       // Domain card.* terikat ke worker ini (salah bind) → proxy ke farm worker supaya quiz jalan.
       // Setelah domain dipindah ke cardpath-farm, redirect 301 di bawah otomatis aktif utk traffic legacy.
@@ -124,6 +130,22 @@ export default {
           __h = applyInjections(__h, cfgW, url.hostname);
           const cfgS1 = await siteCfg(env);
           __h = applyInjections(__h, cfgS1, url.hostname);
+          // PEKAN1 Task 1+2: gam.js di result page SUB1 — interstitial transisi + native slot bawah hasil
+          if (sub1Path.endsWith('/start/result.html') && !__h.includes('gam.js')) {
+            let s1cfg=[];
+            try {
+              if (!globalThis.__cpSlotsCache || Date.now()-globalThis.__cpSlotsCache.ts > 60000) {
+                const rr = await env.DB.prepare('SELECT * FROM ad_slots WHERE enabled=1').all();
+                globalThis.__cpSlotsCache = { ts: Date.now(), slots: rr.results||[] };
+              }
+              s1cfg = (globalThis.__cpSlotsCache.slots||[]).filter(s=>['cardpath_result_native','cardpath_carousel_native'].includes(s.slot_id))
+                .map(s=>({ id: s.slot_id==='cardpath_carousel_native' ? 'cp-ad-carousel' : 'cp-ad-native',
+                  unit:s.unit_path, sizes:JSON.parse(s.sizes_json||'[]'),
+                  pos: s.slot_id==='cardpath_carousel_native' ? 'carousel' : 'native' }));
+            } catch(e) {}
+            const cfgTag1 = '<script>window.CP_SLOTS='+JSON.stringify(s1cfg)+'</scr'+'ipt>';
+            __h = __h.replace('</body>', cfgTag1 + '<script src="/gam.js" defer></scr'+'ipt></body>');
+          }
           const r2 = new Response(__h, assetResp);
           r2.headers.set('Content-Type','text/html; charset=utf-8');
           r2.headers.delete('Content-Length');

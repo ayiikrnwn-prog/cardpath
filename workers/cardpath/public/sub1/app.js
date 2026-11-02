@@ -157,7 +157,7 @@ function forwardUtmLinks() {
   });
 }
 function track(event, data) {
-  const payload = Object.assign({ event, ts: Date.now(), page: location.pathname, lid: getLid(), utm: getUtm(), sub: window.CP_SUB || 'sub1' }, data||{});
+  const payload = Object.assign({ event, ts: Date.now(), page: location.pathname, lid: getLid(), utm: getUtm(), session_id: (window.CP_SESS_ID || (function(){ try { return sessionStorage.getItem('cp_sid'); } catch(e){ return null; } })() || null), sub: window.CP_SUB || 'sub1' }, data||{});
   try { fetch('/api/track', { method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify(payload), keepalive:true }).catch(()=>{}); } catch(e) { console.log('[track]', payload); }
 }
@@ -422,6 +422,7 @@ function quizSubmitServer(hasEmail){
   const payload = {
     answers: a,
     elapsed_ms: Date.now() - Number(sessionStorage.getItem('cp_quiz_started_at')||Date.now()),
+    session_ms: Math.round(performance.now()),
     lid: getLid(),
     utm_source: getUtm().utm_source || null,
     calc_used: sessionStorage.getItem('cp_calc_used')==='1',
@@ -649,6 +650,7 @@ function resultsRender() {
         '<p class="disclaimer-sm">Estimate based on publicly available approval criteria — not a guarantee or pre-approval. Educational content only, not financial advice.</p>';
       forwardUtmLinks();
       document.querySelectorAll('a[data-slide]').forEach(a=>a.addEventListener('click',()=>track('match_slide',{from:m,to:new URLSearchParams(a.getAttribute('href').split('?')[1]||'').get('m'),idx:idx+1,fit,intent})));
+  const caz=document.getElementById('carousel-ad-zone'); if(caz) caz.style.display='block';
   const jb=document.getElementById('jump-btn'); if(jb) jb.addEventListener('click',()=>track('jump_click',{lid:getLid(),fit,intent,m,o}));
       if (document.getElementById('gate-result').scrollIntoView) document.getElementById('gate-result').scrollIntoView({behavior:'smooth'});
     });
@@ -844,6 +846,7 @@ window.__cpDebug = {
 // ---------- init ----------
 document.addEventListener('DOMContentLoaded', () => {
   forwardUtmLinks();
+  try { if (!sessionStorage.getItem('cp_quiz_started_at')) sessionStorage.setItem('cp_quiz_started_at', String(Date.now())); } catch(e){}
   quizRender();
   resultsRender();
   calcOdds();
@@ -851,3 +854,34 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.cta, .nav-cta').forEach(el=>
     el.addEventListener('click',()=>track('cta_click',{label:el.textContent.trim().slice(0,40)})));
 });
+
+// PEKAN1 Task 1: interstitial transisi quiz→result — intercept klik jump di result page
+// (guard: hanya result page; quiz page tetap tanpa iklan; 1x/session di-guard di gam.js)
+(function () {
+  if (!/result\.html$|\/result$/.test(location.pathname)) return;
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[data-jump]');
+    if (!a) return;
+    if (typeof window.cpInterstitialShow !== 'function') return; // gam.js belum siap → navigasi normal
+    e.preventDefault();
+    var href = a.getAttribute('href');
+    window.cpInterstitialShow(function () { location.href = href; });
+  }, true);
+})();
+
+// PEKAN1 Task 5: Ad Placement API (INERT — aktif hanya setelah H5 Games approval)
+// adConfig/adBreak dibungkus flag CP_H5_APPROVED (default false). Framing game-light:
+// progress bar "Level x/9" dirender di quiz; "Challenge Complete" di result.
+window.CP_H5_APPROVED = window.CP_H5_APPROVED || false;
+(function () {
+  if (window.CP_H5_APPROVED !== true) return; // INERT sampai approval
+  window.adConfig = window.adConfig || function (c) { window.__adConfigOpts = c; };
+  window.adBreak = window.adBreak || function (o) { window.__adBreakQueue = (window.__adBreakQueue || []).concat([o]); };
+})();
+function cpLevelLabel(i, total) { return 'Level ' + (i + 1) + '/' + total; }
+function cpChallengeBadge() { return '<span style="display:inline-block;background:#e8f7ee;color:#1a7f42;border-radius:999px;padding:4px 12px;font-size:12.5px;font-weight:600;margin-bottom:8px">Challenge Complete</span>'; }
+// Rewarded flow (siap, dipanggil saat CP_H5_APPROVED):
+function cpRewardedUnlock(beforeReward, showAd, viewed, dismissed) {
+  if (!window.CP_H5_APPROVED || typeof adBreak !== 'function') { dismissed(); return; }
+  adBreak({ type: 'reward', beforeReward: beforeReward, adDismissed: dismissed, adViewed: viewed, adBreakDone: function () {} });
+}
