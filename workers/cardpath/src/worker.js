@@ -156,17 +156,18 @@ async function __handle(request, env, ctx) {
             const cfgTag1 = '<script>window.CP_SLOTS='+JSON.stringify(s1cfg)+'</scr'+'ipt>';
             __h = __h.replace('</body>', cfgTag1 + '<script src="/gam.js" defer></scr'+'ipt></body>');
           }
-          const r2 = new Response(__h, assetResp);
-          r2.headers.set('Content-Type','text/html; charset=utf-8');
-          r2.headers.delete('Content-Length');
-          r2.headers.set('Cache-Control','no-store');
-          applyLidCookie(r2.headers, url); // X1: first-touch cookie
           // Meta Pixel + QuizStart + GTag (perf agent spec 30 Okt) — config inline, script di akhir body
+          // FIX URUTAN: modifikasi __h SEBELUM Response dibuat (dulu setelah r2 = tak masuk)
           const PIXEL_ID = env.CP_PIXEL_ID || '1467955421937228';
           if (PIXEL_ID && !__h.includes('cp-pixel.js')) {
             const cfg = '<script>window.CP_PIXEL={pixelId:\''+PIXEL_ID+'\',gtagId:\''+(env.CP_GTAG_ID||'')+'\',gtagLabel:\''+(env.CP_GTAG_LABEL||'')+'\'};</'+'script>';
             __h = __h.replace('</body>', cfg + '<script src="/cp-pixel.js" defer></scr'+'ipt></body>');
           }
+          const r2 = new Response(__h, assetResp);
+          r2.headers.set('Content-Type','text/html; charset=utf-8');
+          r2.headers.delete('Content-Length');
+          r2.headers.set('Cache-Control','no-store');
+          applyLidCookie(r2.headers, url); // X1: first-touch cookie
           return r2;
         }
         const r2=new Response(assetResp.body, assetResp); r2.headers.set('Cache-Control','no-store'); return r2;
