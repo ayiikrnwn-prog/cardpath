@@ -48,6 +48,8 @@ function applyLidCookie(headers, url) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    // C1b: page rule zone me-redirect /start/* → /sub1/* (di luar worker). Worker menangani
+    // KEDUA bentuk: path /sub1/start/* dipetakan ke sub1Path yang sama tanpa redirect ganda.
     const path = url.pathname;
 
     // CORS untuk API (same-origin saja sebenarnya, tapi safety)
@@ -93,21 +95,16 @@ export default {
     }
 
     // ---------- Opsi A: quiz flow = SUB1 ----------
-    // C1b: normalisasi jalur legacy /sub1/* → canonical /start/* (biar SEMUA result/quiz
-    // dilayani blok card.* yang inject gam.js — tidak ada jalur yatim)
-    if (url.hostname.startsWith('card.') && path.startsWith('/sub1/')) {
-      const canon = path.replace(/^\/sub1/, '');
-      return Response.redirect('https://card.seputar-ntt.com' + canon + (url.search ? '?' + url.searchParams.toString() : ''), 301);
-    }
-    if (path.startsWith('/start/')) {
-      // Domain card.* terikat ke worker ini (salah bind) → proxy ke farm worker supaya quiz jalan.
-      // Setelah domain dipindah ke cardpath-farm, redirect 301 di bawah otomatis aktif utk traffic legacy.
-      if (url.hostname.startsWith('card.')) {
+    // (path sudah dinormalisasi di atas — /sub1/* pada card.* diperlakukan sbg /start/*)
+    if ((path.startsWith('/start/') || path.startsWith('/sub1/start/')) && url.hostname.startsWith('card.')) {
+      {
       // SUB1 (hostname card.*) → serve assets dari /sub1/* (quiz flow farming, tanpa iklan, API sama di worker ini)
       // C1 fix: canonical extensionless harus serve VERSI BARU + track.js
       // - /start/quiz (no ext) → /sub1/start/quiz.html (bukan index.html legacy!)
       // - semua response HTML di-rewrite utk inject track.js
-      let sub1Path = path === '/' ? '/sub1/index.html' : '/sub1' + path;
+      // C1b: normalisasi path '/sub1/start/x' (page-rule variant) → '/sub1/sub1/...' bug — strip
+      let __p = path.startsWith('/sub1/start/') ? path.replace(/^\/sub1/, '') : path;
+      let sub1Path = __p === '/' ? '/sub1/index.html' : '/sub1' + __p;
       if (!sub1Path.endsWith('.html') && !sub1Path.endsWith('.js') && !sub1Path.endsWith('.css') && !sub1Path.endsWith('.txt') && !sub1Path.endsWith('.xml')) {
         // map: /sub1/start/quiz → /sub1/start/quiz.html ; /sub1/start → /sub1/start/index.html
         if (sub1Path.endsWith('/quiz') || sub1Path.endsWith('/result') || sub1Path.endsWith('/index')) sub1Path += '.html';
