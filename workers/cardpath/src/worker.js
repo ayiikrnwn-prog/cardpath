@@ -140,24 +140,8 @@ async function __handle(request, env, ctx) {
           __h = applyInjections(__h, cfgW, url.hostname);
           const cfgS1 = await siteCfg(env);
           __h = applyInjections(__h, cfgS1, url.hostname);
-          // PEKAN1 Task 1+2: gam.js di result page SUB1 — interstitial transisi + native slot bawah hasil
-          if (sub1Path.endsWith('/start/result.html') && !__h.includes('gam.js')) {
-            let s1cfg=[];
-            try {
-              if (!globalThis.__cpSlotsCache || Date.now()-globalThis.__cpSlotsCache.ts > 60000) {
-                const rr = await env.DB.prepare('SELECT * FROM ad_slots WHERE enabled=1').all();
-                globalThis.__cpSlotsCache = { ts: Date.now(), slots: rr.results||[] };
-              }
-              s1cfg = (globalThis.__cpSlotsCache.slots||[]).filter(s=>['cardpath_result_native','cardpath_carousel_native'].includes(s.slot_id))
-                .map(s=>({ id: s.slot_id==='cardpath_carousel_native' ? 'cp-ad-carousel' : 'cp-ad-native',
-                  unit:s.unit_path, sizes:JSON.parse(s.sizes_json||'[]'),
-                  pos: s.slot_id==='cardpath_carousel_native' ? 'carousel' : 'native' }));
-            } catch(e) {}
-            const cfgTag1 = '<script>window.CP_SLOTS='+JSON.stringify(s1cfg)+'</scr'+'ipt>';
-            __h = __h.replace('</body>', cfgTag1 + '<script src="/gam.js" defer></scr'+'ipt></body>');
-          }
-          // Meta Pixel + QuizStart + GTag (perf agent spec 30 Okt) — config inline, script di akhir body
-          // FIX URUTAN: modifikasi __h SEBELUM Response dibuat (dulu setelah r2 = tak masuk)
+          // Meta Pixel + QuizStart + GTag — config inline, script di akhir body
+          // (URUTAN: modifikasi __h SEBELUM Response dibuat)
           const PIXEL_ID = env.CP_PIXEL_ID || '1467955421937228';
           if (PIXEL_ID && !__h.includes('cp-pixel.js')) {
             const cfg = '<script>window.CP_PIXEL={pixelId:\''+PIXEL_ID+'\',gtagId:\''+(env.CP_GTAG_ID||'')+'\',gtagLabel:\''+(env.CP_GTAG_LABEL||'')+'\'};</'+'script>';
@@ -251,27 +235,6 @@ async function __handle(request, env, ctx) {
         const cfg = '<script>window.CP_PIXEL={pixelId:\''+env.CP_PIXEL_ID+'\',gtagId:\''+(env.CP_GTAG_ID||'')+'\',gtagLabel:\''+(env.CP_GTAG_LABEL||'')+'\'};</'+'script>';
         __html = __html.replace('</body>', cfg + '<script src="/cp-pixel.js" defer></scr'+'ipt></body>');
       }
-      // Ad Slot Studio (money pages cardpath.*): render slot divs dari D1 config + CP_SLOTS + gam.js
-      if (url.hostname.startsWith('cardpath.') && !path.startsWith('/start') && !__html.includes('gam.js')) {
-        try {
-          if (!globalThis.__cpSlotsCache || Date.now()-globalThis.__cpSlotsCache.ts > 60000) {
-            const r = await env.DB.prepare('SELECT * FROM ad_slots WHERE enabled=1').all();
-            globalThis.__cpSlotsCache = { ts: Date.now(), slots: r.results||[] };
-          }
-          const slots = globalThis.__cpSlotsCache.slots;
-          let divsTop='', divsBottom='', cfgA=[];
-          slots.forEach((s,i)=>{
-            const pos = s.position||'top';
-            const div = '<div id="cp-ad-'+i+'" data-cpslot="'+s.slot_id+'" data-position="'+pos+'" style="min-height:'+(s.min_height||90)+'px;display:block;text-align:center;margin:14px auto;max-width:970px"></div>';
-            if (pos==='top') divsTop += div; else divsBottom += div;
-            cfgA.push({ id:'cp-ad-'+i, unit:s.unit_path, sizes:JSON.parse(s.sizes_json||'[]'), pos:pos });
-          });
-          const cfgTag = '<scr'+'ipt>window.CP_SLOTS='+JSON.stringify(cfgA)+'</scr'+'ipt>';
-          const gamTag = '<scr'+'ipt src="/gam.js" defer></scr'+'ipt>';
-          if (divsTop) __html = __html.replace(/(<body[^>]*>)/, '$1'+divsTop);
-          if (divsBottom || cfgTag) __html = __html.replace('</body>', divsBottom + cfgTag + gamTag + '</body>');
-        } catch(e) { console.log('slots err', String(e).slice(0,120)); }
-      }
       const cfgW2 = await siteCfg(env);
       __html = applyInjections(__html, cfgW2, url.hostname);
       const __r2 = new Response(__html, assetResp);
@@ -280,37 +243,11 @@ async function __handle(request, env, ctx) {
       applyLidCookie(__r2.headers, url); // X1: SUB2 landing/P1/P2 cookie dari URL lid
       return __r2;
     }
-    // GAM wrapper injection — hanya cardpath.* HTML (money pages), bukan card.* (SUB1 non-monetisasi)
+    // AD MANAGER REMOVED (per Shelby 4 Nov): semua injeksi GAM/GPT dicabut dari cardpath.*
+    // — HTML dilayani apa adanya (tracking tetap, tidak ada slot/lelang).
     if (url.hostname.startsWith('cardpath.') &&
         (assetResp.headers.get('content-type')||'').includes('text/html')) {
       let html = await assetResp.text();
-      const isQuiz = path.startsWith('/start');
-      if (!isQuiz && !html.includes('gam.js')) {
-        // Ad Slot Studio: baca config slot dari D1 (cache in-memory 60s) → render per slot aktif
-        try {
-          if (!globalThis.__cpSlotsCache || Date.now()-globalThis.__cpSlotsCache.ts > 60000) {
-            const r = await env.DB.prepare('SELECT * FROM ad_slots WHERE enabled=1').all();
-            globalThis.__cpSlotsCache = { ts: Date.now(), slots: r.results||[] };
-          }
-          const slots = globalThis.__cpSlotsCache.slots;
-          let divsTop='', divsBottom='', cfg=[];
-          slots.forEach((s,i)=>{
-            const pos = s.position||'top';
-            const div = `<div id="cp-ad-${i}" data-cpslot="${s.slot_id}" data-position="${pos}" style="min-height:${s.min_height||90}px;display:block;text-align:center;margin:14px auto;max-width:970px"></div>`;
-            if (pos==='top') divsTop += div; else divsBottom += div;
-            cfg.push({ id:'cp-ad-'+i, unit:s.unit_path, sizes:JSON.parse(s.sizes_json||'[]'), pos:pos });
-          });
-          const cfgTag = '<script>window.CP_SLOTS='+JSON.stringify(cfg)+'</scr'+'ipt>';
-          const gamTag = '<script src="/gam.js" defer></scr'+'ipt>';
-          if (divsTop) html = html.replace(/(<body[^>]*>)/, '$1' + divsTop);
-          if (html.includes('</body>')) html = html.replace('</body>', divsBottom + cfgTag + gamTag + '</body>');
-        } catch(e) {
-          // fallback: slot default top (jika D1 gagal)
-          const adDiv = '<div id="cp-ad-top" style="min-height:90px;display:block;text-align:center;margin:14px auto;max-width:970px"></div>';
-          const gamTag = '<script src="/gam.js" defer></scr' + 'ipt>';
-          if (html.includes('</body>')) html = html.replace('</body>', adDiv + gamTag + '</body>');
-        }
-      }
       const injected = new Response(html, assetResp);
       injected.headers.set('Content-Type','text/html; charset=utf-8');
       injected.headers.set('Cache-Control','no-store');
